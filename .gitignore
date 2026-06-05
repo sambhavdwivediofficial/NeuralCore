@@ -1,0 +1,295 @@
+# =========================
+# NeuralCore .gitignore
+# Copyright (c) 2026 Sambhav Dwivedi
+# =========================
+
+# Python
+
+# -------------------------
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# Virtual Environments
+
+venv/
+.venv/
+env/
+ENV/
+
+# Pytest
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Mypy
+
+.mypy_cache/
+
+# Ruff
+
+.ruff_cache/
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# -------------------------
+
+# Node.js / Next.js
+
+# -------------------------
+
+node_modules/
+
+.next/
+out/
+build/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -------------------------
+
+# React
+
+# -------------------------
+
+coverage/
+
+# -------------------------
+
+# Rust
+
+# -------------------------
+
+target/
+
+Cargo.lock
+
+# -------------------------
+
+# Terraform
+
+# -------------------------
+
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# -------------------------
+
+# Docker
+
+# -------------------------
+
+docker-data/
+docker-volumes/
+
+# -------------------------
+
+# Logs
+
+# -------------------------
+
+logs/
+*.log
+
+# -------------------------
+
+# Runtime Files
+
+# -------------------------
+
+*.pid
+*.seed
+*.out
+*.err
+
+# -------------------------
+
+# Environment Variables
+
+# -------------------------
+
+.env
+.env.local
+.env.example
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Keep template
+
+!.env.example
+
+# -------------------------
+
+# Database Files
+
+# -------------------------
+
+*.db
+*.sqlite
+*.sqlite3
+
+# -------------------------
+
+# Redis
+
+# -------------------------
+
+dump.rdb
+
+# -------------------------
+
+# Vector Databases
+
+# -------------------------
+
+qdrant_storage/
+milvus_data/
+weaviate_data/
+faiss_indexes/
+
+# -------------------------
+
+# AI / ML
+
+# -------------------------
+
+weights/
+artifacts/
+
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+
+# -------------------------
+
+# Training Outputs
+
+# -------------------------
+
+runs/
+wandb/
+mlruns/
+
+# -------------------------
+
+# Benchmarks
+
+# -------------------------
+
+benchmark_results/
+
+# -------------------------
+
+# Generated Docs
+
+# -------------------------
+
+site/
+
+# -------------------------
+
+# IDE
+
+# -------------------------
+
+.vscode/
+.idea/
+
+# -------------------------
+
+# OS
+
+# -------------------------
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------
+
+# Temporary Files
+
+# -------------------------
+
+tmp/
+temp/
+.cache/
+
+# -------------------------
+
+# Archives
+
+# -------------------------
+
+*.zip
+*.tar
+*.gz
+*.7z
+txt
+
+# -------------------------
+
+# Project Docs
+
+# -------------------------
+
+# ARCHITECTURE.md
+
+# CHANGELOG.md
+
+# CODE_OF_CONDUCT.md
+
+# CONTRIBUTING.md
+
+# ROADMAP.md
+
+# SECURITY.md
+
+# -------------------------
+
+# NeuralCore Custom
+
+# -------------------------
+
+backups/
+exports/
+generated/
+local_data/
+
+# Example user datasets
+
+# Ignore uploaded files
+
+uploads/
+
+# Ignore generated examples
+
+examples/**/output/
+examples/**/results/
+examples/**/generated/
