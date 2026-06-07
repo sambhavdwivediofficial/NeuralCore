@@ -139,7 +139,7 @@ logs/
 
 # Keep template
 
-!.env.example
+# !.env.example
 
 # -------------------------
 
