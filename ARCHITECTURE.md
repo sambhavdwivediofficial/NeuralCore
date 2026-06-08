@@ -90,35 +90,38 @@ Default configurations are safe. Authentication is required by default. Tenant i
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          Client Layer                                    │
+│                          Client Layer                                   │
 │     Web UI (Next.js)     Python SDK     TypeScript SDK     REST API     │
 └──────────────────────────────┬──────────────────────────────────────────┘
                                │
-┌──────────────────────────────▼──────────────────────────────────────────┐
-│                        API Gateway Layer                                  │
-│         FastAPI Router    Middleware    Auth    Rate Limiting             │
-└──────────────────────────────┬──────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        API Gateway Layer                               │
+│         FastAPI Router    Middleware    Auth    Rate Limiting          │
+└──────────────────────────────┬─────────────────────────────────────────┘
                                │
         ┌──────────────────────┼──────────────────────┐
-        │                      │                       │
-┌───────▼───────┐   ┌──────────▼─────────┐   ┌───────▼────────┐
-│  RAG Pipeline │   │   Agent Subsystem  │   │  Admin / Mgmt  │
-│               │   │                    │   │                │
-│  Ingestion    │   │  Agent Manager     │   │  Multi-Tenancy │
-│  Chunking     │   │  Agent Runtime     │   │  Billing       │
-│  Embedding    │   │  Agent Comms       │   │  Analytics     │
-│  Retrieval    │   │  A2A Protocol      │   │  Evaluation    │
-│  Reranking    │   │  Workflow Engine   │   │  Monitoring    │
-│  Prompt Eng.  │   │  Tool Framework    │   │  Plugins       │
-│  Memory       │   │  MCP Layer         │   │                │
-└───────┬───────┘   └──────────┬─────────┘   └───────┬────────┘
-        │                      │                       │
-┌───────▼──────────────────────▼───────────────────────▼────────┐
-│                     Core Services Layer                         │
-│   Model Gateway    Database Layer    Background Queue           │
-│   Vector Stores    Knowledge Graph   Fine-Tuning               │
-│   Auth / RBAC      Plugin Registry   Rust Engine               │
-└────────────────────────────────────────────────────────────────┘
+        │                      │                      │
+        ▼                      ▼                      ▼
+┌───────────────┐   ┌────────────────────┐   ┌─────────────────┐
+│  RAG Pipeline │   │   Agent Subsystem  │   │   Admin / Mgmt  │
+│               │   │                    │   │                 │
+│  Ingestion    │   │  Agent Manager     │   │   Multi-Tenancy │
+│  Chunking     │   │  Agent Runtime     │   │   Billing       │
+│  Embedding    │   │  Agent Comms       │   │   Analytics     │
+│  Retrieval    │   │  A2A Protocol      │   │   Evaluation    │
+│  Reranking    │   │  Workflow Engine   │   │   Monitoring    │
+│  Prompt Eng.  │   │  Tool Framework    │   │   Plugins       │
+│  Memory       │   │  MCP Layer         │   │                 │
+└───────┬───────┘   └──────────┬─────────┘   └───────┬─────────┘
+        │                      │                     │
+        ▼                      ▼                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Core Services Layer                     │
+│   Model Gateway    Database Layer    Background Queue       │
+│   Vector Stores    Knowledge Graph   Fine-Tuning            │
+│   Auth / RBAC      Plugin Registry   Rust Engine            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
