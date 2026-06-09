@@ -1,0 +1,389 @@
+# configs/monitoring.yaml
+
+metrics:
+  enabled: true
+  backend: prometheus
+  port: 9090
+  path: /metrics
+  include_process_metrics: true
+  include_platform_metrics: true
+  namespace: neuralcore
+  subsystem: ""
+  default_labels:
+    service: neuralcore
+    environment: "${APP_ENV}"
+    version: "${APP_VERSION}"
+  collection_interval_seconds: 15
+  retention_time: "15d"
+  push_gateway:
+    enabled: false
+    url: "${PROMETHEUS_PUSHGATEWAY_URL}"
+    job: neuralcore
+    push_interval_seconds: 30
+
+tracing:
+  enabled: true
+  backend: otlp
+  endpoint: "${OTLP_ENDPOINT}"
+  headers: {}
+  insecure: false
+  service_name: neuralcore
+  service_version: "${APP_VERSION}"
+  service_namespace: production
+  environment: "${APP_ENV}"
+  sample_rate: 1.0
+  sampler: parentbased_traceidratio
+  max_queue_size: 2048
+  max_export_batch_size: 512
+  export_timeout_millis: 30000
+  schedule_delay_millis: 5000
+  propagators:
+    - tracecontext
+    - baggage
+    - b3multi
+  instrumented_libraries:
+    fastapi: true
+    sqlalchemy: true
+    httpx: true
+    redis: true
+    celery: true
+    grpc: true
+  excluded_paths:
+    - /health
+    - /ready
+    - /live
+    - /metrics
+
+healthcheck:
+  enabled: true
+  path: /health
+  ready_path: /ready
+  live_path: /live
+  startup_path: /startup
+  interval_seconds: 30
+  timeout_seconds: 10
+  failure_threshold: 3
+  success_threshold: 1
+  include_details: true
+  checks:
+    database:
+      enabled: true
+      timeout_seconds: 5
+      query: "SELECT 1"
+      critical: true
+    redis:
+      enabled: true
+      timeout_seconds: 3
+      critical: true
+    qdrant:
+      enabled: true
+      timeout_seconds: 5
+      critical: false
+    milvus:
+      enabled: false
+      timeout_seconds: 5
+      critical: false
+    elasticsearch:
+      enabled: false
+      timeout_seconds: 5
+      critical: false
+    model_gateway:
+      enabled: false
+      timeout_seconds: 10
+      critical: false
+    celery:
+      enabled: true
+      timeout_seconds: 5
+      critical: false
+    disk:
+      enabled: true
+      path: /
+      warning_threshold_percent: 80
+      critical_threshold_percent: 90
+      critical: false
+    memory:
+      enabled: true
+      warning_threshold_percent: 80
+      critical_threshold_percent: 90
+      critical: false
+
+alerting:
+  enabled: true
+  evaluation_interval: 1m
+  rules:
+    high_error_rate:
+      expr: 'rate(neuralcore_http_requests_total{status=~"5.."}[5m]) / rate(neuralcore_http_requests_total[5m]) > 0.05'
+      for: 2m
+      severity: critical
+      summary: "High error rate on {{ $labels.service }}"
+      description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+    high_latency_p99:
+      expr: 'histogram_quantile(0.99, rate(neuralcore_http_request_duration_seconds_bucket[5m])) > 2.0'
+      for: 5m
+      severity: warning
+      summary: "High p99 request latency on {{ $labels.service }}"
+      description: "p99 latency is {{ $value | humanizeDuration }}"
+    retrieval_high_latency:
+      expr: 'histogram_quantile(0.95, rate(neuralcore_retrieval_duration_seconds_bucket[5m])) > 1.0'
+      for: 5m
+      severity: warning
+      summary: "Slow retrieval performance"
+      description: "p95 retrieval latency is {{ $value | humanizeDuration }}"
+    celery_queue_depth:
+      expr: 'neuralcore_celery_queue_length > 1000'
+      for: 5m
+      severity: warning
+      summary: "Celery queue backlog building up"
+      description: "Queue {{ $labels.queue }} has {{ $value }} pending tasks"
+    database_connection_pool:
+      expr: 'neuralcore_db_pool_checked_out / neuralcore_db_pool_size > 0.9'
+      for: 3m
+      severity: warning
+      summary: "Database connection pool near exhaustion"
+      description: "Pool utilization is {{ $value | humanizePercentage }}"
+    high_memory_usage:
+      expr: '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85'
+      for: 5m
+      severity: critical
+      summary: "High memory utilization on {{ $labels.instance }}"
+      description: "Memory utilization is {{ $value | humanizePercentage }}"
+    disk_space_low:
+      expr: '(1 - (node_filesystem_free_bytes / node_filesystem_size_bytes)) > 0.85'
+      for: 5m
+      severity: warning
+      summary: "Disk space low on {{ $labels.instance }}"
+      description: "Disk {{ $labels.mountpoint }} is {{ $value | humanizePercentage }} full"
+    agent_failure_rate:
+      expr: 'rate(neuralcore_agent_tasks_total{status="failed"}[10m]) / rate(neuralcore_agent_tasks_total[10m]) > 0.10'
+      for: 5m
+      severity: warning
+      summary: "High agent task failure rate"
+      description: "Agent failure rate is {{ $value | humanizePercentage }}"
+    embedding_error_rate:
+      expr: 'rate(neuralcore_embedding_requests_total{status="error"}[5m]) / rate(neuralcore_embedding_requests_total[5m]) > 0.05'
+      for: 3m
+      severity: warning
+      summary: "Embedding service errors"
+      description: "Embedding error rate is {{ $value | humanizePercentage }}"
+    worker_down:
+      expr: 'neuralcore_celery_worker_online == 0'
+      for: 2m
+      severity: critical
+      summary: "Celery worker offline"
+      description: "Worker {{ $labels.hostname }} has been offline for 2 minutes"
+
+  notification_channels:
+    slack:
+      enabled: "${SLACK_ALERTS_ENABLED}"
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#neuralcore-alerts"
+      username: NeuralCore Alerts
+      icon_emoji: ":bell:"
+      severity_levels:
+        - critical
+        - warning
+    pagerduty:
+      enabled: "${PAGERDUTY_ENABLED}"
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      severity_levels:
+        - critical
+    email:
+      enabled: "${EMAIL_ALERTS_ENABLED}"
+      smtp_host: "${SMTP_HOST}"
+      smtp_port: 587
+      smtp_user: "${SMTP_USER}"
+      smtp_password: "${SMTP_PASSWORD}"
+      from_address: "alerts@neuralcore.ai"
+      to_addresses:
+        - "${ALERT_EMAIL_RECIPIENTS}"
+      severity_levels:
+        - critical
+        - warning
+
+grafana:
+  enabled: true
+  url: "${GRAFANA_URL}"
+  api_key: "${GRAFANA_API_KEY}"
+  org_id: 1
+  default_datasource: prometheus
+  dashboards_path: "infrastructure/monitoring/grafana.json"
+  dashboard_refresh_interval: "30s"
+
+loki:
+  enabled: true
+  url: "${LOKI_URL}"
+  tenant_id: "${LOKI_TENANT_ID}"
+  push_path: /loki/api/v1/push
+  query_path: /loki/api/v1/query_range
+  labels:
+    service: neuralcore
+    environment: "${APP_ENV}"
+    version: "${APP_VERSION}"
+  batch_size: 1024
+  batch_wait_seconds: 1
+  timeout_seconds: 10
+  min_backoff_seconds: 0.5
+  max_backoff_seconds: 300
+  max_retries: 10
+
+custom_metrics:
+  api:
+    - name: http_request_duration_seconds
+      type: histogram
+      help: "HTTP request duration in seconds"
+      labels:
+        - method
+        - path
+        - status
+      buckets:
+        - 0.001
+        - 0.005
+        - 0.010
+        - 0.025
+        - 0.050
+        - 0.100
+        - 0.250
+        - 0.500
+        - 1.000
+        - 2.500
+        - 5.000
+    - name: http_requests_total
+      type: counter
+      help: "Total number of HTTP requests"
+      labels:
+        - method
+        - path
+        - status
+    - name: active_connections
+      type: gauge
+      help: "Number of active HTTP connections"
+  retrieval:
+    - name: retrieval_duration_seconds
+      type: histogram
+      help: "Retrieval operation duration"
+      labels:
+        - strategy
+        - knowledge_base_id
+        - tenant_id
+    - name: retrieval_results_count
+      type: histogram
+      help: "Number of results returned"
+      labels:
+        - strategy
+    - name: reranking_duration_seconds
+      type: histogram
+      help: "Reranking operation duration"
+      labels:
+        - reranker
+    - name: cache_hits_total
+      type: counter
+      help: "Total retrieval cache hits"
+      labels:
+        - cache_type
+    - name: cache_misses_total
+      type: counter
+      help: "Total retrieval cache misses"
+      labels:
+        - cache_type
+  agents:
+    - name: agent_tasks_total
+      type: counter
+      help: "Total agent tasks processed"
+      labels:
+        - agent_type
+        - status
+        - tenant_id
+    - name: agent_task_duration_seconds
+      type: histogram
+      help: "Agent task execution duration"
+      labels:
+        - agent_type
+    - name: active_agents
+      type: gauge
+      help: "Number of active agent instances"
+      labels:
+        - agent_type
+        - tenant_id
+    - name: tool_calls_total
+      type: counter
+      help: "Total tool calls made by agents"
+      labels:
+        - tool_name
+        - status
+  embeddings:
+    - name: embedding_requests_total
+      type: counter
+      help: "Total embedding requests"
+      labels:
+        - provider
+        - model
+        - status
+    - name: embedding_tokens_total
+      type: counter
+      help: "Total tokens sent for embedding"
+      labels:
+        - provider
+        - model
+    - name: embedding_duration_seconds
+      type: histogram
+      help: "Embedding generation duration"
+      labels:
+        - provider
+        - model
+  llm:
+    - name: llm_requests_total
+      type: counter
+      help: "Total LLM API requests"
+      labels:
+        - provider
+        - model
+        - status
+    - name: llm_prompt_tokens_total
+      type: counter
+      help: "Total prompt tokens consumed"
+      labels:
+        - provider
+        - model
+    - name: llm_completion_tokens_total
+      type: counter
+      help: "Total completion tokens consumed"
+      labels:
+        - provider
+        - model
+    - name: llm_request_duration_seconds
+      type: histogram
+      help: "LLM request duration"
+      labels:
+        - provider
+        - model
+  ingestion:
+    - name: documents_ingested_total
+      type: counter
+      help: "Total documents ingested"
+      labels:
+        - source_type
+        - status
+        - tenant_id
+    - name: ingestion_duration_seconds
+      type: histogram
+      help: "Document ingestion duration"
+      labels:
+        - source_type
+    - name: chunks_created_total
+      type: counter
+      help: "Total chunks created"
+      labels:
+        - chunker
+        - tenant_id
+  billing:
+    - name: billing_events_total
+      type: counter
+      help: "Total billing events recorded"
+      labels:
+        - event_type
+        - tenant_id
+    - name: active_subscriptions
+      type: gauge
+      help: "Number of active subscriptions"
+      labels:
+        - plan

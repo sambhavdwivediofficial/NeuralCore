@@ -1,0 +1,305 @@
+# configs/embeddings.yaml
+
+default_provider: openai
+default_model: "text-embedding-3-large"
+default_query_model: "text-embedding-3-large"
+cache_embeddings: true
+cache_ttl_seconds: 86400
+cache_backend: redis
+cache_prefix: "neuralcore:embeddings:"
+batch_size_default: 512
+max_retries: 3
+retry_delay_seconds: 1.0
+retry_backoff_multiplier: 2.0
+normalize_embeddings: true
+normalize_method: l2
+fallback_provider: null
+fallback_on_error: false
+telemetry_enabled: true
+cost_tracking_enabled: true
+
+providers:
+  openai:
+    enabled: true
+    api_key: "${OPENAI_API_KEY}"
+    api_base: "https://api.openai.com/v1"
+    api_version: null
+    organization: "${OPENAI_ORGANIZATION}"
+    timeout_seconds: 30
+    max_retries: 3
+    http_client_pool_size: 20
+    models:
+      text-embedding-3-large:
+        dimensions: 3072
+        max_tokens: 8191
+        batch_size: 2048
+        supports_dimensions_param: true
+        default_dimensions: 3072
+        cost_per_1k_tokens: 0.00013
+        normalize: true
+      text-embedding-3-small:
+        dimensions: 1536
+        max_tokens: 8191
+        batch_size: 2048
+        supports_dimensions_param: true
+        default_dimensions: 1536
+        cost_per_1k_tokens: 0.000020
+        normalize: true
+      text-embedding-ada-002:
+        dimensions: 1536
+        max_tokens: 8191
+        batch_size: 2048
+        supports_dimensions_param: false
+        cost_per_1k_tokens: 0.000100
+        normalize: true
+
+  bge:
+    enabled: true
+    backend: sentence_transformers
+    device: "${EMBEDDING_DEVICE}"
+    compute_dtype: float16
+    batch_size: 256
+    normalize_embeddings: true
+    show_progress_bar: false
+    models:
+      bge-large-en-v1.5:
+        huggingface_id: "BAAI/bge-large-en-v1.5"
+        dimensions: 1024
+        max_tokens: 512
+        query_instruction: "Represent this sentence for searching relevant passages:"
+        passage_instruction: null
+        pooling_strategy: cls
+        normalize: true
+        batch_size: 128
+      bge-base-en-v1.5:
+        huggingface_id: "BAAI/bge-base-en-v1.5"
+        dimensions: 768
+        max_tokens: 512
+        query_instruction: "Represent this sentence for searching relevant passages:"
+        passage_instruction: null
+        pooling_strategy: cls
+        normalize: true
+        batch_size: 256
+      bge-small-en-v1.5:
+        huggingface_id: "BAAI/bge-small-en-v1.5"
+        dimensions: 384
+        max_tokens: 512
+        query_instruction: "Represent this sentence for searching relevant passages:"
+        passage_instruction: null
+        pooling_strategy: cls
+        normalize: true
+        batch_size: 512
+      bge-m3:
+        huggingface_id: "BAAI/bge-m3"
+        dimensions: 1024
+        max_tokens: 8192
+        query_instruction: null
+        passage_instruction: null
+        pooling_strategy: cls
+        normalize: true
+        batch_size: 64
+        multilingual: true
+        supports_dense: true
+        supports_sparse: true
+        supports_colbert: true
+
+  e5:
+    enabled: true
+    backend: sentence_transformers
+    device: "${EMBEDDING_DEVICE}"
+    compute_dtype: float16
+    normalize_embeddings: true
+    models:
+      e5-large-v2:
+        huggingface_id: "intfloat/e5-large-v2"
+        dimensions: 1024
+        max_tokens: 512
+        query_instruction: "query:"
+        passage_instruction: "passage:"
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 128
+      e5-base-v2:
+        huggingface_id: "intfloat/e5-base-v2"
+        dimensions: 768
+        max_tokens: 512
+        query_instruction: "query:"
+        passage_instruction: "passage:"
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 256
+      e5-small-v2:
+        huggingface_id: "intfloat/e5-small-v2"
+        dimensions: 384
+        max_tokens: 512
+        query_instruction: "query:"
+        passage_instruction: "passage:"
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 512
+      multilingual-e5-large:
+        huggingface_id: "intfloat/multilingual-e5-large"
+        dimensions: 1024
+        max_tokens: 512
+        query_instruction: "query:"
+        passage_instruction: "passage:"
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 64
+        multilingual: true
+      e5-mistral-7b-instruct:
+        huggingface_id: "intfloat/e5-mistral-7b-instruct"
+        dimensions: 4096
+        max_tokens: 32768
+        query_instruction: "Instruct: Retrieve semantically similar text.\nQuery:"
+        passage_instruction: null
+        pooling_strategy: last_token
+        normalize: true
+        batch_size: 16
+
+  jina:
+    enabled: true
+    api_key: "${JINA_API_KEY}"
+    api_base: "https://api.jina.ai/v1"
+    timeout_seconds: 30
+    max_retries: 3
+    models:
+      jina-embeddings-v3:
+        dimensions: 1024
+        max_tokens: 8192
+        batch_size: 2048
+        task_types:
+          - retrieval.query
+          - retrieval.passage
+          - separation
+          - classification
+          - text-matching
+        supports_late_chunking: true
+        supports_matryoshka: true
+        multilingual: true
+        cost_per_1k_tokens: 0.000018
+      jina-embeddings-v2-base-en:
+        dimensions: 768
+        max_tokens: 8192
+        batch_size: 2048
+        cost_per_1k_tokens: 0.000018
+      jina-clip-v2:
+        dimensions: 1024
+        max_tokens: 8192
+        multimodal: true
+        supports_images: true
+        supports_text: true
+        batch_size: 64
+        cost_per_1k_tokens: 0.000020
+
+  nomic:
+    enabled: true
+    api_key: "${NOMIC_API_KEY}"
+    api_base: "https://api-atlas.nomic.ai/v1"
+    timeout_seconds: 30
+    max_retries: 3
+    models:
+      nomic-embed-text-v1.5:
+        dimensions: 768
+        max_tokens: 8192
+        batch_size: 2048
+        task_type: search_document
+        query_task_type: search_query
+        supports_matryoshka: true
+        multilingual: false
+        cost_per_1k_tokens: 0.0000100
+      nomic-embed-vision-v1.5:
+        dimensions: 768
+        max_tokens: null
+        supports_images: true
+        multimodal: true
+        batch_size: 64
+        cost_per_image: 0.000100
+
+  sentence_transformers:
+    enabled: true
+    backend: sentence_transformers
+    device: "${EMBEDDING_DEVICE}"
+    compute_dtype: float32
+    cache_folder: "${MODEL_CACHE_DIR}"
+    models:
+      all-mpnet-base-v2:
+        huggingface_id: "sentence-transformers/all-mpnet-base-v2"
+        dimensions: 768
+        max_tokens: 384
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 256
+      all-MiniLM-L6-v2:
+        huggingface_id: "sentence-transformers/all-MiniLM-L6-v2"
+        dimensions: 384
+        max_tokens: 256
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 512
+      paraphrase-multilingual-mpnet-base-v2:
+        huggingface_id: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        dimensions: 768
+        max_tokens: 128
+        pooling_strategy: mean
+        normalize: true
+        batch_size: 256
+        multilingual: true
+
+  custom:
+    enabled: false
+    endpoint: "${CUSTOM_EMBEDDING_ENDPOINT}"
+    api_key: "${CUSTOM_EMBEDDING_API_KEY}"
+    timeout_seconds: 30
+    max_retries: 3
+    models:
+      custom-model:
+        dimensions: 768
+        max_tokens: 512
+        batch_size: 256
+        input_field: "texts"
+        output_field: "embeddings"
+        headers:
+          Content-Type: "application/json"
+
+chunking_defaults:
+  chunk_size_tokens: 512
+  chunk_overlap_tokens: 64
+  min_chunk_size_tokens: 50
+  max_chunk_size_tokens: 1024
+  respect_sentence_boundaries: true
+  respect_paragraph_boundaries: true
+  preserve_metadata: true
+
+embedding_pipeline:
+  preprocessing:
+    lowercase: false
+    strip_whitespace: true
+    remove_special_chars: false
+    max_length_truncation: true
+    truncation_strategy: right
+  postprocessing:
+    normalize: true
+    normalize_method: l2
+    quantization_enabled: false
+    quantization_bits: 8
+    pca_reduction_enabled: false
+    pca_dimensions: null
+
+quality:
+  similarity_sanity_check: true
+  max_acceptable_similarity_self: 1.001
+  min_acceptable_similarity_self: 0.999
+  zero_vector_detection: true
+  nan_detection: true
+  inf_detection: true
+  dimension_validation: true
+
+hardware:
+  device: "${EMBEDDING_DEVICE}"
+  cuda_device_id: 0
+  use_half_precision: true
+  torch_compile: false
+  num_threads: 4
+  model_cache_dir: "${MODEL_CACHE_DIR}"
+  max_model_cache_size_gb: 20

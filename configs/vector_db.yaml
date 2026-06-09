@@ -1,0 +1,268 @@
+# configs/vector_db.yaml
+
+default_backend: qdrant
+tenant_isolation_strategy: collection_prefix
+collection_prefix_separator: "__"
+auto_create_collections: true
+connection_pool_size: 10
+connection_timeout_seconds: 10
+request_timeout_seconds: 30
+max_retries: 3
+retry_delay_seconds: 0.5
+retry_backoff_multiplier: 2.0
+health_check_interval_seconds: 30
+telemetry_enabled: true
+
+backends:
+  qdrant:
+    enabled: true
+    host: "${QDRANT_HOST}"
+    port: 6333
+    grpc_port: 6334
+    prefer_grpc: true
+    https: false
+    api_key: "${QDRANT_API_KEY}"
+    prefix: null
+    timeout: 30
+    connection_pool_size: 10
+    max_retries: 3
+    retry_delay: 0.5
+    collection_settings:
+      default_distance: Cosine
+      on_disk_payload: false
+      hnsw_config:
+        m: 16
+        ef_construct: 100
+        full_scan_threshold: 10000
+        max_indexing_threads: 0
+        on_disk: false
+      optimizers_config:
+        deleted_threshold: 0.2
+        vacuum_min_vector_number: 1000
+        default_segment_number: 0
+        max_segment_size: null
+        memmap_threshold: null
+        indexing_threshold: 20000
+        flush_interval_sec: 5
+        max_optimization_threads: 1
+      wal_config:
+        wal_capacity_mb: 32
+        wal_segments_ahead: 0
+      quantization_config:
+        scalar:
+          type: int8
+          quantile: 0.99
+          always_ram: false
+    shard_number: 1
+    replication_factor: 1
+    write_consistency_factor: 1
+    on_disk_vectors: false
+    async_scorer: true
+
+  milvus:
+    enabled: false
+    host: "${MILVUS_HOST}"
+    port: 19530
+    user: "${MILVUS_USER}"
+    password: "${MILVUS_PASSWORD}"
+    db_name: "default"
+    token: "${MILVUS_TOKEN}"
+    secure: false
+    server_pem_path: null
+    server_name: null
+    client_key_path: null
+    client_pem_path: null
+    ca_pem_path: null
+    timeout: 30
+    connection_pool_size: 10
+    collection_settings:
+      index_type: HNSW
+      metric_type: COSINE
+      params:
+        M: 16
+        efConstruction: 100
+      search_params:
+        ef: 128
+      shard_num: 1
+      num_partitions: 0
+      consistency_level: Session
+      auto_id: false
+      enable_dynamic_field: true
+    load_settings:
+      replica_number: 1
+      resource_groups: []
+      refresh: false
+
+  weaviate:
+    enabled: false
+    url: "${WEAVIATE_URL}"
+    api_key: "${WEAVIATE_API_KEY}"
+    auth_client_secret: null
+    timeout_config:
+      connect: 5
+      read: 30
+    additional_headers: {}
+    connection_pool_maxsize: 20
+    embedded_options: null
+    collection_settings:
+      vector_index_type: hnsw
+      vector_index_config:
+        skip: false
+        cleanup_interval_seconds: 300
+        ef: -1
+        ef_min: 100
+        ef_max: 500
+        dynamic_ef_factor: 8
+        max_connections: 64
+        vector_cache_max_objects: 1000000000000
+        distance_metric: cosine
+        pq:
+          enabled: false
+          training_limit: 100000
+          segments: 0
+          centroids: 256
+      inverted_index_config:
+        bm25:
+          b: 0.75
+          k1: 1.2
+        cleanup_interval_seconds: 60
+        stop_words:
+          preset: en
+      replication_config:
+        factor: 1
+      multi_tenancy_config:
+        enabled: true
+
+  pgvector:
+    enabled: false
+    host: "${POSTGRES_HOST}"
+    port: 5432
+    database: "${POSTGRES_DB}"
+    user: "${POSTGRES_USER}"
+    password: "${POSTGRES_PASSWORD}"
+    schema: "public"
+    ssl_mode: prefer
+    ssl_cert: null
+    ssl_key: null
+    ssl_rootcert: null
+    pool_size: 20
+    max_overflow: 10
+    pool_timeout: 30
+    pool_recycle: 3600
+    pool_pre_ping: true
+    table_settings:
+      index_type: ivfflat
+      distance_metric: cosine
+      ivfflat_lists: 100
+      hnsw_m: 16
+      hnsw_ef_construction: 64
+      hnsw_ef_search: 40
+      use_halfvec: false
+      use_sparsevec: false
+    maintenance:
+      analyze_after_upsert: true
+      analyze_threshold: 1000
+      vacuum_enabled: true
+      vacuum_scale_factor: 0.1
+      vacuum_threshold: 500
+
+  elasticsearch:
+    enabled: false
+    hosts:
+      - "${ELASTICSEARCH_HOST}"
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
+    api_key: "${ELASTICSEARCH_API_KEY}"
+    cloud_id: "${ELASTICSEARCH_CLOUD_ID}"
+    ca_certs: null
+    verify_certs: true
+    ssl_show_warn: false
+    timeout: 30
+    max_retries: 3
+    retry_on_timeout: true
+    connection_pool_size: 10
+    index_settings:
+      number_of_shards: 1
+      number_of_replicas: 1
+      refresh_interval: "1s"
+      knn_settings:
+        num_candidates: 100
+        k: 10
+      mappings:
+        dynamic: true
+        numeric_detection: false
+        properties:
+          content:
+            type: text
+            analyzer: english
+          embedding:
+            type: dense_vector
+            dims: 1536
+            index: true
+            similarity: cosine
+            index_options:
+              type: hnsw
+              m: 16
+              ef_construction: 100
+          metadata:
+            type: object
+            dynamic: true
+          source:
+            type: keyword
+          created_at:
+            type: date
+
+  faiss:
+    enabled: false
+    index_type: IVFFlat
+    metric: cosine
+    nlist: 100
+    nprobe: 10
+    use_gpu: false
+    gpu_device_id: 0
+    index_path: "${FAISS_INDEX_PATH}"
+    persistence_enabled: true
+    persistence_interval_seconds: 300
+    in_memory: false
+    flat_threshold: 10000
+    pq_m: 8
+    pq_nbits: 8
+    hnsw_m: 32
+    hnsw_ef_construction: 40
+    hnsw_ef_search: 16
+    opq_enabled: false
+    opq_m: 8
+
+collection_naming:
+  tenant_separator: "__"
+  kb_separator: "__"
+  format: "{tenant_id}{tenant_separator}{kb_id}"
+  max_length: 255
+  sanitize_special_chars: true
+  lowercase: true
+
+maintenance:
+  cleanup_orphaned_collections: true
+  cleanup_interval_hours: 24
+  stats_refresh_interval_seconds: 300
+  reindex_on_schema_change: false
+  vacuum_enabled: true
+  vacuum_schedule: "0 2 * * *"
+
+monitoring:
+  latency_histogram_buckets:
+    - 0.001
+    - 0.005
+    - 0.010
+    - 0.025
+    - 0.050
+    - 0.100
+    - 0.250
+    - 0.500
+    - 1.000
+    - 2.500
+    - 5.000
+    - 10.000
+  slow_query_threshold_ms: 100
+  slow_query_logging: true
+  query_plan_logging: false

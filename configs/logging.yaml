@@ -1,0 +1,356 @@
+# configs/logging.yaml
+
+version: 1
+disable_existing_loggers: false
+
+format: json
+level: INFO
+output: stdout
+include_caller: true
+include_process: false
+include_thread: false
+
+fields:
+  service: neuralcore
+  environment: "${APP_ENV}"
+  version: "${APP_VERSION}"
+
+json_fields:
+  timestamp: timestamp
+  level: level
+  message: message
+  logger: logger
+  caller: caller
+  trace_id: trace_id
+  span_id: span_id
+  tenant_id: tenant_id
+  user_id: user_id
+  request_id: request_id
+  correlation_id: correlation_id
+  duration_ms: duration_ms
+  status_code: status_code
+  method: method
+  path: path
+  error: error
+  error_type: error_type
+  stack_trace: stack_trace
+
+sensitive_fields:
+  - password
+  - token
+  - api_key
+  - secret
+  - authorization
+  - cookie
+  - x-api-key
+  - credit_card
+  - ssn
+  - private_key
+  - refresh_token
+  - access_token
+
+sanitization:
+  enabled: true
+  replacement: "[REDACTED]"
+  patterns:
+    - "Bearer [A-Za-z0-9\\-._~+/]+"
+    - "sk-[A-Za-z0-9]{32,}"
+    - "nc_live_[A-Za-z0-9]{32,}"
+    - "nc_test_[A-Za-z0-9]{32,}"
+    - "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+    - "\\b(?:\\d{4}[- ]?){3}\\d{4}\\b"
+
+loggers:
+  root:
+    level: INFO
+    handlers:
+      - stdout
+
+  neuralcore:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  neuralcore.api:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  neuralcore.api.request:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: api
+
+  neuralcore.retrieval:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: retrieval
+
+  neuralcore.ingestion:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: ingestion
+
+  neuralcore.agents:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: agents
+
+  neuralcore.agents.a2a:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: a2a
+
+  neuralcore.embeddings:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: embeddings
+
+  neuralcore.vector_stores:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: vector_stores
+
+  neuralcore.memory:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: memory
+
+  neuralcore.graphrag:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: graphrag
+
+  neuralcore.billing:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: billing
+
+  neuralcore.multitenancy:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: multitenancy
+
+  neuralcore.auth:
+    level: WARNING
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: auth
+
+  neuralcore.queue:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: queue
+
+  neuralcore.finetuning:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: finetuning
+
+  neuralcore.training:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: training
+
+  neuralcore.evaluation:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: evaluation
+
+  neuralcore.plugins:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: plugins
+
+  neuralcore.mcp:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: mcp
+
+  neuralcore.model_gateway:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+    fields:
+      subsystem: model_gateway
+
+  sqlalchemy.engine:
+    level: WARNING
+    propagate: false
+    handlers:
+      - stdout
+
+  sqlalchemy.pool:
+    level: WARNING
+    propagate: false
+    handlers:
+      - stdout
+
+  celery:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  celery.task:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  uvicorn:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  uvicorn.access:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  uvicorn.error:
+    level: INFO
+    propagate: false
+    handlers:
+      - stdout
+
+  httpx:
+    level: WARNING
+    propagate: false
+    handlers:
+      - stdout
+
+  httpcore:
+    level: WARNING
+    propagate: false
+    handlers:
+      - stdout
+
+handlers:
+  stdout:
+    class: logging.StreamHandler
+    stream: ext://sys.stdout
+    formatter: json
+    level: DEBUG
+
+  stderr:
+    class: logging.StreamHandler
+    stream: ext://sys.stderr
+    formatter: json
+    level: ERROR
+
+  file:
+    class: logging.handlers.RotatingFileHandler
+    filename: "${LOG_FILE_PATH}"
+    maxBytes: 104857600
+    backupCount: 10
+    encoding: utf-8
+    formatter: json
+    level: DEBUG
+
+formatters:
+  json:
+    class: pythonjsonlogger.jsonlogger.JsonFormatter
+    format: "%(timestamp)s %(level)s %(name)s %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S.%fZ"
+    rename_fields:
+      levelname: level
+      name: logger
+      asctime: timestamp
+    static_fields:
+      service: neuralcore
+      environment: "${APP_ENV}"
+
+  text:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+slow_request:
+  enabled: true
+  threshold_ms: 1000
+  level: WARNING
+  include_headers: false
+  include_body: false
+
+error_tracking:
+  enabled: true
+  sentry_dsn: "${SENTRY_DSN}"
+  sentry_environment: "${APP_ENV}"
+  sentry_release: "${APP_VERSION}"
+  sentry_traces_sample_rate: 0.1
+  sentry_profiles_sample_rate: 0.1
+  sentry_attach_stacktrace: true
+  sentry_send_default_pii: false
+  capture_unhandled_exceptions: true
+  capture_warnings: true
+  ignore_exceptions:
+    - "neuralcore.exceptions.NotFoundError"
+    - "neuralcore.exceptions.ValidationError"
+    - "neuralcore.exceptions.AuthenticationError"
+
+performance:
+  log_db_queries: false
+  db_query_threshold_ms: 100
+  log_cache_operations: false
+  log_vector_store_queries: false
+  vector_store_threshold_ms: 50
+  log_llm_calls: true
+  llm_call_threshold_ms: 1000

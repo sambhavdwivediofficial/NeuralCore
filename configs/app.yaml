@@ -1,0 +1,242 @@
+# configs/app.yaml
+
+app:
+  name: NeuralCore
+  version: "1.0.0"
+  environment: production
+  debug: false
+  timezone: UTC
+  base_url: "https://api.neuralcore.ai"
+  frontend_url: "https://app.neuralcore.ai"
+  docs_url: "https://docs.neuralcore.ai"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  worker_class: uvicorn.workers.UvicornWorker
+  reload: false
+  access_log: true
+  proxy_headers: true
+  forwarded_allow_ips: "*"
+  timeout_keep_alive: 30
+  timeout_notify: 30
+  graceful_timeout: 30
+  limit_concurrency: 1000
+  limit_max_requests: 10000
+  backlog: 2048
+
+api:
+  prefix: "/api/v1"
+  title: "NeuralCore API"
+  description: "NeuralCore AI Infrastructure Platform API"
+  version: "1.0.0"
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  openapi_url: "/openapi.json"
+  include_in_schema: true
+  swagger_ui_oauth2_redirect_url: "/docs/oauth2-redirect"
+
+cors:
+  enabled: true
+  allow_origins:
+    - "https://app.neuralcore.ai"
+    - "https://docs.neuralcore.ai"
+  allow_origin_regex: null
+  allow_methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+    - HEAD
+  allow_headers:
+    - Authorization
+    - Content-Type
+    - Accept
+    - X-Request-ID
+    - X-Tenant-ID
+    - X-API-Key
+    - X-Correlation-ID
+  expose_headers:
+    - X-Request-ID
+    - X-Correlation-ID
+    - X-RateLimit-Limit
+    - X-RateLimit-Remaining
+    - X-RateLimit-Reset
+  allow_credentials: true
+  max_age: 600
+
+security:
+  secret_key: "${SECRET_KEY}"
+  allowed_hosts:
+    - "api.neuralcore.ai"
+    - "app.neuralcore.ai"
+    - "localhost"
+  trusted_proxies:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+  csrf_protection: true
+  content_security_policy: "default-src 'self'; script-src 'self'; object-src 'none'"
+  hsts_enabled: true
+  hsts_max_age: 31536000
+  hsts_include_subdomains: true
+  hsts_preload: true
+  frame_options: DENY
+  content_type_nosniff: true
+  referrer_policy: strict-origin-when-cross-origin
+
+rate_limiting:
+  enabled: true
+  backend: redis
+  default_limit: 1000
+  default_window_seconds: 3600
+  burst_limit: 100
+  burst_window_seconds: 60
+  by_tenant: true
+  by_user: true
+  by_ip: false
+  headers_enabled: true
+  exempt_paths:
+    - "/health"
+    - "/ready"
+    - "/metrics"
+    - "/api/v1/auth/token"
+
+middleware:
+  request_id:
+    enabled: true
+    header_name: X-Request-ID
+    generate_if_missing: true
+  correlation_id:
+    enabled: true
+    header_name: X-Correlation-ID
+  compression:
+    enabled: true
+    minimum_size: 1024
+    algorithm: gzip
+  request_logging:
+    enabled: true
+    log_request_body: false
+    log_response_body: false
+    log_headers: false
+    sensitive_headers:
+      - Authorization
+      - X-API-Key
+      - Cookie
+  timing:
+    enabled: true
+    header_name: X-Process-Time
+
+pagination:
+  default_page_size: 20
+  max_page_size: 100
+  page_param: page
+  size_param: size
+
+upload:
+  max_file_size_mb: 500
+  max_batch_size_mb: 2000
+  allowed_mime_types:
+    - application/pdf
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/msword
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - application/vnd.ms-excel
+    - text/plain
+    - text/csv
+    - application/json
+    - application/xml
+    - text/xml
+    - text/markdown
+    - text/html
+    - audio/mpeg
+    - audio/wav
+    - audio/ogg
+    - audio/mp4
+    - video/mp4
+    - video/mpeg
+    - video/webm
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/webp
+    - image/tiff
+  temp_directory: "/tmp/neuralcore/uploads"
+  storage_backend: s3
+  storage_bucket: "${STORAGE_BUCKET}"
+  storage_prefix: "uploads/"
+  presigned_url_expiry_seconds: 3600
+
+storage:
+  backend: s3
+  region: "${AWS_REGION}"
+  bucket: "${STORAGE_BUCKET}"
+  access_key_id: "${AWS_ACCESS_KEY_ID}"
+  secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+  endpoint_url: "${S3_ENDPOINT_URL}"
+  use_ssl: true
+  path_style: false
+  upload_prefix: "uploads/"
+  artifacts_prefix: "artifacts/"
+  models_prefix: "models/"
+  datasets_prefix: "datasets/"
+  checkpoints_prefix: "checkpoints/"
+  presigned_url_expiry: 3600
+
+cache:
+  backend: redis
+  default_ttl_seconds: 3600
+  max_ttl_seconds: 86400
+  key_prefix: "neuralcore:"
+  serializer: json
+  compression_enabled: true
+  compression_threshold_bytes: 1024
+  pools:
+    default:
+      ttl: 3600
+    embeddings:
+      ttl: 86400
+    retrieval:
+      ttl: 1800
+    sessions:
+      ttl: 7200
+    rate_limiting:
+      ttl: 3600
+
+health:
+  path: "/health"
+  ready_path: "/ready"
+  live_path: "/live"
+  include_details: true
+  checks:
+    database: true
+    redis: true
+    vector_store: true
+    model_gateway: false
+
+feature_flags:
+  graphrag_enabled: true
+  multimodal_enabled: true
+  fine_tuning_enabled: true
+  distributed_training_enabled: false
+  billing_enabled: true
+  plugin_marketplace_enabled: false
+  mcp_enabled: true
+  a2a_protocol_enabled: true
+  federated_retrieval_enabled: true
+  streaming_enabled: true
+  evaluation_enabled: true
+
+telemetry:
+  enabled: true
+  service_name: neuralcore-api
+  service_version: "1.0.0"
+  environment: "${APP_ENV}"
+  otlp_endpoint: "${OTLP_ENDPOINT}"
+  otlp_headers: {}
+  trace_sample_rate: 1.0
+  metrics_enabled: true
+  metrics_port: 9090

@@ -1,0 +1,345 @@
+# configs/agents.yaml
+
+runtime:
+  max_concurrent_agents_per_tenant: 50
+  max_concurrent_agents_global: 500
+  default_timeout_seconds: 300
+  max_timeout_seconds: 3600
+  idle_timeout_seconds: 600
+  heartbeat_interval_seconds: 15
+  heartbeat_miss_threshold: 3
+  graceful_shutdown_timeout_seconds: 30
+  worker_pool_size: 20
+  queue_backend: redis
+  queue_prefix: "neuralcore:agents:"
+  state_backend: redis
+  state_ttl_seconds: 86400
+  checkpoint_interval_seconds: 60
+  checkpoint_backend: database
+  checkpoint_compression: true
+  checkpoint_max_size_mb: 50
+  max_checkpoint_history: 10
+  event_bus_backend: redis
+  event_bus_stream_prefix: "neuralcore:events:"
+  event_retention_seconds: 3600
+
+scheduler:
+  enabled: true
+  backend: redis
+  max_retries: 3
+  retry_delay_seconds: 5
+  retry_backoff_multiplier: 2.0
+  retry_max_delay_seconds: 60
+  dead_letter_queue_enabled: true
+  dead_letter_queue_ttl_seconds: 604800
+  priority_levels: 10
+  default_priority: 5
+  starvation_prevention: true
+  starvation_boost_interval_seconds: 30
+
+lifecycle:
+  states:
+    - CREATED
+    - INITIALIZING
+    - IDLE
+    - RUNNING
+    - SUSPENDED
+    - CHECKPOINTING
+    - RECOVERING
+    - TERMINATING
+    - TERMINATED
+    - FAILED
+  allowed_transitions:
+    CREATED:
+      - INITIALIZING
+    INITIALIZING:
+      - IDLE
+      - FAILED
+    IDLE:
+      - RUNNING
+      - SUSPENDED
+      - TERMINATING
+    RUNNING:
+      - IDLE
+      - SUSPENDED
+      - CHECKPOINTING
+      - TERMINATING
+      - FAILED
+    SUSPENDED:
+      - RUNNING
+      - RECOVERING
+      - TERMINATING
+    CHECKPOINTING:
+      - RUNNING
+      - FAILED
+    RECOVERING:
+      - IDLE
+      - FAILED
+    TERMINATING:
+      - TERMINATED
+    FAILED:
+      - RECOVERING
+
+planner:
+  model: "gpt-4o"
+  max_planning_steps: 20
+  max_replanning_attempts: 3
+  planning_timeout_seconds: 60
+  temperature: 0.1
+  max_tokens: 4096
+  chain_of_thought_enabled: true
+  reflection_enabled: true
+  reflection_max_iterations: 3
+  task_decomposition_depth: 5
+  parallel_planning_enabled: true
+  plan_validation_enabled: true
+  fallback_model: "claude-3-5-sonnet-20241022"
+  system_prompt_template: "planner_system_v1"
+
+executor:
+  model: "gpt-4o"
+  max_execution_steps: 50
+  step_timeout_seconds: 30
+  max_tool_calls_per_step: 10
+  temperature: 0.0
+  max_tokens: 4096
+  parallel_tool_calls: true
+  max_parallel_tool_calls: 5
+  tool_call_retry_enabled: true
+  tool_call_max_retries: 2
+  error_recovery_enabled: true
+  error_recovery_max_attempts: 3
+  fallback_model: "claude-3-5-sonnet-20241022"
+  system_prompt_template: "executor_system_v1"
+
+retrieval_agent:
+  model: "gpt-4o"
+  max_retrieval_iterations: 5
+  queries_per_iteration: 3
+  top_k_per_query: 10
+  rerank_enabled: true
+  rerank_top_n: 5
+  temperature: 0.0
+  max_tokens: 2048
+  query_decomposition_enabled: true
+  hyde_enabled: true
+  iterative_refinement_enabled: true
+  synthesis_model: "gpt-4o"
+  system_prompt_template: "retrieval_agent_system_v1"
+
+memory_agent:
+  model: "gpt-4o-mini"
+  extraction_enabled: true
+  extraction_interval_turns: 5
+  extraction_batch_size: 10
+  importance_scoring_enabled: true
+  importance_threshold: 0.6
+  consolidation_enabled: true
+  consolidation_interval_hours: 24
+  consolidation_model: "gpt-4o-mini"
+  max_facts_per_session: 500
+  deduplication_enabled: true
+  deduplication_similarity_threshold: 0.92
+  temperature: 0.0
+  max_tokens: 1024
+  system_prompt_template: "memory_agent_system_v1"
+
+research_agent:
+  model: "gpt-4o"
+  max_research_depth: 5
+  max_sources_per_query: 10
+  max_total_sources: 50
+  research_timeout_seconds: 300
+  synthesis_model: "gpt-4o"
+  fact_verification_enabled: true
+  citation_tracking_enabled: true
+  deduplication_enabled: true
+  iterative_deepening_enabled: true
+  temperature: 0.2
+  max_tokens: 8192
+  report_generation_enabled: true
+  report_format: "structured_markdown"
+  system_prompt_template: "research_agent_system_v1"
+
+coding_agent:
+  model: "gpt-4o"
+  temperature: 0.0
+  max_tokens: 8192
+  supported_languages:
+    - python
+    - javascript
+    - typescript
+    - rust
+    - go
+    - java
+    - c
+    - cpp
+    - csharp
+    - ruby
+    - php
+    - swift
+    - kotlin
+    - scala
+    - r
+    - julia
+    - bash
+    - sql
+  code_execution_enabled: false
+  code_execution_timeout_seconds: 30
+  code_execution_sandbox: docker
+  test_generation_enabled: true
+  test_frameworks:
+    python:
+      - pytest
+      - unittest
+    javascript:
+      - jest
+      - mocha
+    typescript:
+      - jest
+      - vitest
+  lint_enabled: true
+  security_scan_enabled: true
+  documentation_generation_enabled: true
+  explanation_verbosity: detailed
+  system_prompt_template: "coding_agent_system_v1"
+
+tool_agent:
+  model: "gpt-4o"
+  temperature: 0.0
+  max_tokens: 2048
+  max_tool_selection_attempts: 3
+  parallel_execution_enabled: true
+  max_parallel_tools: 5
+  tool_result_caching: true
+  tool_result_cache_ttl_seconds: 300
+  structured_output_enforcement: true
+  system_prompt_template: "tool_agent_system_v1"
+
+orchestrator:
+  model: "gpt-4o"
+  max_agents_per_task: 10
+  coordination_timeout_seconds: 600
+  result_aggregation_strategy: "weighted_merge"
+  conflict_resolution_strategy: "confidence_based"
+  temperature: 0.0
+  max_tokens: 4096
+  parallel_agent_execution: true
+  sequential_fallback_enabled: true
+  task_routing_strategy: "capability_based"
+  load_balancing_enabled: true
+  system_prompt_template: "orchestrator_system_v1"
+
+communication:
+  message_max_size_bytes: 1048576
+  message_ttl_seconds: 3600
+  queue_max_depth: 10000
+  broker_backend: redis
+  broker_prefix: "neuralcore:broker:"
+  serialization_format: msgpack
+  compression_enabled: true
+  compression_algorithm: lz4
+  encryption_enabled: true
+  encryption_algorithm: AES-256-GCM
+  routing_table_ttl_seconds: 300
+  routing_table_refresh_seconds: 60
+  dead_letter_enabled: true
+  dead_letter_max_retries: 3
+  acknowledge_timeout_seconds: 30
+  channel_types:
+    direct:
+      max_message_size_bytes: 1048576
+      delivery_guarantee: at_least_once
+      ordering_guarantee: fifo
+    broadcast:
+      max_subscribers: 1000
+      max_message_size_bytes: 524288
+      delivery_guarantee: best_effort
+    multicast:
+      max_group_size: 100
+      max_message_size_bytes: 524288
+      delivery_guarantee: at_least_once
+    queue:
+      max_depth: 50000
+      max_message_size_bytes: 5242880
+      delivery_guarantee: exactly_once
+      visibility_timeout_seconds: 30
+
+a2a:
+  enabled: true
+  registry_backend: redis
+  registry_prefix: "neuralcore:a2a:registry:"
+  registry_ttl_seconds: 300
+  discovery_enabled: true
+  discovery_method: registry
+  heartbeat_interval_seconds: 10
+  heartbeat_timeout_seconds: 30
+  transport_protocol: websocket
+  transport_port: 8001
+  max_connections_per_agent: 50
+  connection_timeout_seconds: 10
+  request_timeout_seconds: 30
+  authentication_required: true
+  authentication_method: jwt
+  authorization_enabled: true
+  authorization_policy: capability_based
+  encryption_in_transit: true
+  tls_cert_path: "${A2A_TLS_CERT_PATH}"
+  tls_key_path: "${A2A_TLS_KEY_PATH}"
+  max_message_size_bytes: 10485760
+  retry_enabled: true
+  max_retries: 3
+  retry_backoff_base_seconds: 0.5
+  retry_backoff_max_seconds: 10.0
+
+memory:
+  short_term:
+    backend: redis
+    ttl_seconds: 7200
+    max_entries: 1000
+    max_size_bytes: 10485760
+    eviction_policy: lru
+  long_term:
+    backend: database
+    embedding_enabled: true
+    embedding_model: "text-embedding-3-small"
+    max_entries_per_user: 10000
+    retrieval_top_k: 20
+    similarity_threshold: 0.7
+  semantic:
+    backend: vector_store
+    vector_store: qdrant
+    collection_prefix: "semantic_memory"
+    embedding_model: "text-embedding-3-small"
+    top_k: 15
+    similarity_threshold: 0.72
+    max_entries_per_user: 50000
+  episodic:
+    backend: database
+    max_episodes_per_user: 5000
+    episode_summary_enabled: true
+    episode_summary_model: "gpt-4o-mini"
+    retrieval_strategy: time_weighted_similarity
+    time_decay_factor: 0.95
+    top_k: 10
+  session:
+    backend: redis
+    ttl_seconds: 14400
+    max_turns: 200
+    compression_enabled: true
+    serialization_format: msgpack
+
+context_window:
+  default_max_tokens: 128000
+  memory_budget_fraction: 0.15
+  tool_output_budget_fraction: 0.20
+  history_budget_fraction: 0.25
+  knowledge_budget_fraction: 0.35
+  response_budget_fraction: 0.05
+  overflow_strategy: sliding_window
+  priority_order:
+    - system_prompt
+    - recent_history
+    - retrieved_knowledge
+    - memory_context
+    - tool_outputs

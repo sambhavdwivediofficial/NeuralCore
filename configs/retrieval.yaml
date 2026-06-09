@@ -1,0 +1,289 @@
+# configs/retrieval.yaml
+
+default_strategy: hybrid
+default_top_k: 10
+default_top_k_after_rerank: 5
+max_top_k: 100
+min_score_threshold: 0.0
+enable_score_normalization: true
+score_normalization_method: min_max
+timeout_seconds: 30
+cache_enabled: true
+cache_ttl_seconds: 300
+cache_backend: redis
+cache_prefix: "neuralcore:retrieval:"
+cache_key_include_filters: true
+telemetry_enabled: true
+
+vector_search:
+  enabled: true
+  similarity_metric: cosine
+  top_k: 20
+  min_score: 0.0
+  ef_search: 128
+  hnsw_ef: 128
+  nprobe: 16
+  use_approximate: true
+  exact_fallback_threshold: 1000
+  reuse_embedding_cache: true
+  timeout_seconds: 10
+  payload_fields_to_return:
+    - content
+    - doc_id
+    - chunk_index
+    - source
+    - source_type
+    - page_number
+    - created_at
+    - metadata
+
+bm25:
+  enabled: true
+  top_k: 20
+  b: 0.75
+  k1: 1.5
+  epsilon: 0.25
+  language: english
+  min_token_length: 2
+  max_token_length: 100
+  stopwords_enabled: true
+  stemming_enabled: true
+  stemmer: porter
+  custom_stopwords: []
+  idf_method: robertson
+  query_expansion_enabled: false
+  query_expansion_max_terms: 5
+  field_weights:
+    content: 1.0
+    title: 2.0
+    keywords: 1.5
+  timeout_seconds: 5
+  backend: native
+
+hybrid:
+  enabled: true
+  fusion_method: rrf
+  vector_weight: 0.6
+  bm25_weight: 0.4
+  rrf_k: 60
+  normalize_scores: true
+  normalization_method: min_max
+  top_k_per_strategy: 20
+  final_top_k: 10
+  deduplication_enabled: true
+  deduplication_method: chunk_id
+  tie_breaking: score_sum
+  strategies:
+    - name: vector_search
+      weight: 0.6
+      enabled: true
+    - name: bm25
+      weight: 0.4
+      enabled: true
+
+metadata_search:
+  enabled: true
+  top_k: 50
+  supported_operators:
+    - eq
+    - ne
+    - gt
+    - gte
+    - lt
+    - lte
+    - in
+    - nin
+    - contains
+    - starts_with
+    - ends_with
+    - regex
+    - exists
+    - range
+  indexed_fields:
+    - source_type
+    - language
+    - created_at
+    - modified_at
+    - author
+    - project_id
+    - knowledge_base_id
+    - doc_id
+    - page_number
+    - file_extension
+    - tags
+    - categories
+  max_filter_conditions: 20
+  allow_full_scan: false
+  timeout_seconds: 5
+
+graph_search:
+  enabled: true
+  top_k: 15
+  max_hops: 3
+  min_relationship_confidence: 0.5
+  entity_top_k: 5
+  traversal_strategy: bfs
+  max_nodes_explored: 500
+  relationship_types_filter: []
+  entity_types_filter: []
+  combine_with_vector: true
+  vector_weight: 0.5
+  graph_weight: 0.5
+  timeout_seconds: 15
+  community_detection_enabled: true
+  community_top_k: 3
+
+federated_search:
+  enabled: true
+  max_knowledge_bases: 10
+  parallel_execution: true
+  timeout_seconds: 20
+  per_source_top_k: 10
+  final_top_k: 20
+  merge_strategy: rrf
+  deduplication_enabled: true
+  deduplication_similarity_threshold: 0.95
+  source_diversity_enabled: true
+  min_results_per_source: 1
+  timeout_per_source_seconds: 10
+
+multimodal_search:
+  enabled: true
+  top_k: 10
+  supported_modalities:
+    - text
+    - image
+    - audio
+  text_to_image_enabled: true
+  image_to_text_enabled: true
+  text_to_audio_enabled: false
+  cross_modal_weight: 0.5
+  timeout_seconds: 15
+  image_embedding_model: "jina-clip-v2"
+  audio_transcription_model: "whisper-1"
+
+query_rewriting:
+  enabled: true
+  strategies:
+    hyde:
+      enabled: true
+      model: "gpt-4o-mini"
+      max_tokens: 512
+      temperature: 0.7
+      num_hypothetical_documents: 1
+      timeout_seconds: 10
+    step_back:
+      enabled: true
+      model: "gpt-4o-mini"
+      max_tokens: 256
+      temperature: 0.1
+      timeout_seconds: 8
+    decomposition:
+      enabled: true
+      model: "gpt-4o-mini"
+      max_tokens: 512
+      temperature: 0.1
+      max_sub_queries: 4
+      parallel_execution: true
+      timeout_seconds: 10
+    expansion:
+      enabled: false
+      model: "gpt-4o-mini"
+      max_tokens: 256
+      temperature: 0.3
+      max_expanded_terms: 5
+      timeout_seconds: 8
+    splade:
+      enabled: false
+      model: "naver/splade-cocondenser-selfdistil"
+      max_tokens: 256
+  default_strategy: none
+  cache_rewritten_queries: true
+  cache_ttl_seconds: 600
+
+reranking:
+  enabled: true
+  default_reranker: bge
+  top_n: 5
+  min_score_threshold: 0.0
+  cache_enabled: true
+  cache_ttl_seconds: 300
+  async_reranking: false
+  timeout_seconds: 10
+  rerankers:
+    cross_encoder:
+      enabled: true
+      model: "cross-encoder/ms-marco-MiniLM-L-12-v2"
+      device: "${EMBEDDING_DEVICE}"
+      batch_size: 64
+      max_length: 512
+      use_rust_acceleration: true
+      top_n: 5
+    bge:
+      enabled: true
+      model: "BAAI/bge-reranker-v2-m3"
+      device: "${EMBEDDING_DEVICE}"
+      batch_size: 64
+      max_length: 512
+      use_rust_acceleration: true
+      top_n: 5
+    jina:
+      enabled: true
+      api_key: "${JINA_API_KEY}"
+      model: "jina-reranker-v2-base-multilingual"
+      api_base: "https://api.jina.ai/v1"
+      timeout_seconds: 15
+      top_n: 5
+    hybrid:
+      enabled: false
+      rerankers:
+        - name: bge
+          weight: 0.6
+        - name: cross_encoder
+          weight: 0.4
+      fusion_method: rrf
+      rrf_k: 30
+      top_n: 5
+
+context_compression:
+  enabled: true
+  method: extractive
+  target_tokens: 3000
+  min_sentence_score: 0.4
+  sentence_overlap: 1
+  preserve_order: true
+  preserve_boundaries: true
+  abstractive_enabled: false
+  abstractive_model: "gpt-4o-mini"
+  abstractive_max_tokens: 2000
+  abstractive_temperature: 0.1
+  chunk_level_compression: false
+  chunk_score_threshold: 0.5
+
+context_builder:
+  max_context_tokens: 4096
+  include_metadata: true
+  include_source: true
+  include_page_numbers: true
+  include_scores: false
+  include_chunk_ids: false
+  separator: "\n\n---\n\n"
+  citation_format: "[Source: {source}, Page: {page}]"
+  citation_position: after_content
+  deduplication_enabled: true
+  deduplication_similarity_threshold: 0.97
+  ordering_strategy: relevance_score
+  ordering_strategies:
+    - relevance_score
+    - source_diversity
+    - recency
+    - chunk_order
+
+analytics:
+  query_logging_enabled: true
+  result_logging_enabled: false
+  latency_tracking_enabled: true
+  score_distribution_tracking: true
+  cache_hit_tracking: true
+  slow_query_threshold_ms: 500
+  slow_query_logging: true

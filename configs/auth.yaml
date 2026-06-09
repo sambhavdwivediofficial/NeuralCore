@@ -1,0 +1,272 @@
+# configs/auth.yaml
+
+jwt:
+  algorithm: RS256
+  access_token_expire_minutes: 15
+  refresh_token_expire_days: 30
+  issuer: "https://api.neuralcore.ai"
+  audience: "neuralcore-api"
+  leeway_seconds: 10
+  private_key_path: "${JWT_PRIVATE_KEY_PATH}"
+  public_key_path: "${JWT_PUBLIC_KEY_PATH}"
+  private_key_pem: "${JWT_PRIVATE_KEY_PEM}"
+  public_key_pem: "${JWT_PUBLIC_KEY_PEM}"
+  key_id: "${JWT_KEY_ID}"
+  rotate_keys_enabled: true
+  rotation_check_interval_seconds: 3600
+  old_key_grace_period_seconds: 300
+
+password:
+  algorithm: bcrypt
+  bcrypt_rounds: 12
+  min_length: 12
+  max_length: 128
+  require_uppercase: true
+  require_lowercase: true
+  require_digit: true
+  require_special: true
+  special_characters: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  disallow_common_passwords: true
+  common_passwords_list_path: "/app/data/common_passwords.txt"
+  disallow_username_in_password: true
+  password_history_count: 10
+  max_age_days: 90
+  force_change_on_first_login: false
+
+session:
+  backend: redis
+  cookie_name: neuralcore_session
+  cookie_secure: true
+  cookie_httponly: true
+  cookie_samesite: lax
+  cookie_domain: ".neuralcore.ai"
+  session_lifetime_seconds: 86400
+  idle_timeout_seconds: 3600
+  renew_on_access: true
+  max_concurrent_sessions: 10
+  single_session_mode: false
+
+mfa:
+  enabled: true
+  required_for_admin: true
+  required_for_owner: true
+  totp_issuer: "NeuralCore"
+  totp_digits: 6
+  totp_interval: 30
+  totp_algorithm: SHA1
+  backup_codes_count: 10
+  backup_code_length: 10
+  enforce_on_sensitive_operations: true
+  sensitive_operations:
+    - delete_organization
+    - delete_project
+    - manage_api_keys
+    - billing_management
+    - user_deactivation
+
+oauth:
+  enabled: true
+  state_token_expire_seconds: 600
+  pkce_required: true
+  providers:
+    google:
+      enabled: true
+      client_id: "${GOOGLE_CLIENT_ID}"
+      client_secret: "${GOOGLE_CLIENT_SECRET}"
+      authorization_url: "https://accounts.google.com/o/oauth2/v2/auth"
+      token_url: "https://oauth2.googleapis.com/token"
+      userinfo_url: "https://www.googleapis.com/oauth2/v3/userinfo"
+      scope:
+        - openid
+        - email
+        - profile
+      redirect_uri: "${BASE_URL}/api/v1/auth/oauth/google/callback"
+      allow_insecure_http: false
+    github:
+      enabled: true
+      client_id: "${GITHUB_CLIENT_ID}"
+      client_secret: "${GITHUB_CLIENT_SECRET}"
+      authorization_url: "https://github.com/login/oauth/authorize"
+      token_url: "https://github.com/login/oauth/access_token"
+      userinfo_url: "https://api.github.com/user"
+      emails_url: "https://api.github.com/user/emails"
+      scope:
+        - read:user
+        - user:email
+      redirect_uri: "${BASE_URL}/api/v1/auth/oauth/github/callback"
+      allow_insecure_http: false
+    microsoft:
+      enabled: true
+      client_id: "${MICROSOFT_CLIENT_ID}"
+      client_secret: "${MICROSOFT_CLIENT_SECRET}"
+      tenant_id: "${MICROSOFT_TENANT_ID}"
+      authorization_url: "https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/oauth2/v2.0/authorize"
+      token_url: "https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/oauth2/v2.0/token"
+      userinfo_url: "https://graph.microsoft.com/v1.0/me"
+      scope:
+        - openid
+        - email
+        - profile
+        - User.Read
+      redirect_uri: "${BASE_URL}/api/v1/auth/oauth/microsoft/callback"
+      allow_insecure_http: false
+
+api_keys:
+  length_bytes: 32
+  prefix: "nc_"
+  hash_algorithm: bcrypt
+  bcrypt_rounds: 10
+  max_keys_per_project: 25
+  max_keys_per_user: 50
+  expiry_enabled: true
+  default_expiry_days: 365
+  max_expiry_days: 3650
+  show_plaintext_once: true
+  key_format: "${prefix}${environment}_${random}"
+  environments:
+    - live
+    - test
+
+account_security:
+  max_failed_login_attempts: 5
+  lockout_duration_minutes: 30
+  lockout_escalation_enabled: true
+  lockout_escalation_multiplier: 2
+  lockout_max_duration_minutes: 1440
+  failed_attempt_window_minutes: 15
+  reset_failed_attempts_on_success: true
+  notify_on_lockout: true
+  notify_on_suspicious_login: true
+  suspicious_login_new_device: true
+  suspicious_login_new_location: true
+  ip_allowlist_enabled: false
+  ip_allowlist: []
+  ip_blocklist_enabled: true
+  ip_blocklist: []
+  concurrent_login_detection: true
+
+email_verification:
+  required: true
+  token_expire_hours: 24
+  token_length_bytes: 32
+  resend_cooldown_minutes: 5
+  max_resend_attempts: 5
+
+password_reset:
+  token_expire_hours: 2
+  token_length_bytes: 32
+  require_current_password_for_change: true
+  notify_on_reset: true
+  invalidate_sessions_on_reset: true
+
+registration:
+  enabled: true
+  require_email_verification: true
+  allowed_domains: []
+  blocked_domains:
+    - "mailinator.com"
+    - "guerrillamail.com"
+    - "tempmail.com"
+    - "throwaway.email"
+    - "yopmail.com"
+  auto_provision_tenant: true
+  default_role: developer
+  invitation_only_mode: false
+  invitation_expire_days: 7
+
+rbac:
+  enforcement: strict
+  default_deny: true
+  super_admin_role: super_admin
+  system_roles:
+    super_admin:
+      description: "Full platform access"
+      permissions: ["*"]
+    owner:
+      description: "Full organization access"
+      permissions:
+        - "organization:*"
+        - "project:*"
+        - "knowledge_base:*"
+        - "agent:*"
+        - "workflow:*"
+        - "billing:*"
+        - "user:*"
+        - "api_key:*"
+        - "analytics:read"
+        - "monitoring:read"
+        - "settings:*"
+    admin:
+      description: "Administrative access excluding billing ownership"
+      permissions:
+        - "organization:read"
+        - "organization:update"
+        - "project:*"
+        - "knowledge_base:*"
+        - "agent:*"
+        - "workflow:*"
+        - "user:read"
+        - "user:invite"
+        - "user:update"
+        - "api_key:*"
+        - "analytics:read"
+        - "monitoring:read"
+        - "settings:read"
+        - "settings:update"
+    developer:
+      description: "Standard developer access"
+      permissions:
+        - "project:read"
+        - "project:update"
+        - "knowledge_base:*"
+        - "agent:*"
+        - "workflow:*"
+        - "api_key:read"
+        - "api_key:create"
+        - "analytics:read"
+    viewer:
+      description: "Read-only access"
+      permissions:
+        - "project:read"
+        - "knowledge_base:read"
+        - "agent:read"
+        - "workflow:read"
+        - "analytics:read"
+
+audit:
+  enabled: true
+  backend: database
+  async_write: true
+  buffer_size: 1000
+  flush_interval_seconds: 5
+  retention_days: 2555
+  events:
+    - auth.login.success
+    - auth.login.failure
+    - auth.logout
+    - auth.token.refresh
+    - auth.password.change
+    - auth.password.reset
+    - auth.mfa.enabled
+    - auth.mfa.disabled
+    - auth.mfa.challenge.success
+    - auth.mfa.challenge.failure
+    - auth.account.locked
+    - auth.account.unlocked
+    - auth.oauth.login
+    - api_key.created
+    - api_key.revoked
+    - api_key.used
+    - user.created
+    - user.updated
+    - user.deactivated
+    - user.role.changed
+    - organization.created
+    - organization.deleted
+    - organization.member.added
+    - organization.member.removed
+    - project.created
+    - project.deleted
+    - billing.subscription.changed
+    - billing.payment.processed
+    - admin.action
