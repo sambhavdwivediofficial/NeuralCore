@@ -135,7 +135,7 @@ fn compress_lz4(data: &[u8]) -> EngineResult<Vec<u8>> {
     }
 }
 
-fn decompress_lz4(data: &[u8], max_size: usize) -> EngineResult<Vec<u8>> {
+fn decompress_lz4(data: &[u8], _max_size: usize) -> EngineResult<Vec<u8>> {
     #[cfg(feature = "compression")]
     {
         lz4_flex::decompress_size_prepended(data)
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn test_quantize_empty_returns_empty() {
-        let (q, min, max) = quantize_scalar_i8(&[], 0.99).unwrap();
+        let (q, _min, _max) = quantize_scalar_i8(&[], 0.99).unwrap();
         assert!(q.is_empty());
     }
 

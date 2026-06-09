@@ -1,14 +1,15 @@
 // rust_engine/src/vector_index.rs
 
 use crate::error::{EngineError, EngineResult};
-use crate::similarity::{batch_similarity, top_k_by_similarity};
+// use crate::similarity::{batch_similarity, top_k_by_similarity};
+use crate::similarity::batch_similarity;
 use crate::types::{DistanceMetric, IndexStats, SearchResult, Vector};
 use crate::utils::{normalize_vector, validate_vector};
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use priority_queue::PriorityQueue;
 use ordered_float::OrderedFloat;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::collections::{HashMap, HashSet};

@@ -1,41 +1,42 @@
 // rust_engine/src/ffi.rs
 
-use crate::cache::{EmbeddingCache, LruCache, QueryResultCache, SimilarityCache};
+use crate::cache::{EmbeddingCache, QueryResultCache};
 use crate::compression::{
     compress, compress_vectors, decompress, decompress_vectors, dequantize_scalar_i8,
     quantize_scalar_i8, CompressionConfig,
 };
 use crate::reranker::{
-    compute_mrr, compute_ndcg, compute_precision_at_k, compute_recall_at_k, rerank_with_cross_scores,
+    compute_mrr, compute_ndcg, compute_precision_at_k,
     NormalizationMethod, RerankerConfig, RerankerType, ScoreFusion,
 };
 use crate::similarity::{
-    batch_cosine_similarity, batch_dot_product, batch_similarity, cosine_similarity,
+    batch_cosine_similarity, batch_dot_product, cosine_similarity,
     cosine_similarity_prenormalized, dot_product, euclidean_distance, euclidean_similarity,
     top_k_by_similarity,
 };
 use crate::tokenizer::{
-    batch_count_tokens_approximate, count_tokens_approximate, fits_in_context, TokenizerConfig,
-    WhitespaceTokenizer,
+    batch_count_tokens_approximate, count_tokens_approximate, fits_in_context,
 };
-use crate::types::{DistanceMetric, RankedResult, SearchResult};
+use crate::types::{DistanceMetric, RankedResult};
 use crate::utils::{min_max_normalize, normalize_vector_new, reciprocal_rank_fusion, softmax};
 use crate::vector_index::{IndexConfig, VectorIndex};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::PyDict;
+use pyo3::Bound;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
 
 static VECTOR_INDEXES: Lazy<Mutex<HashMap<String, Arc<VectorIndex>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 static EMBEDDING_CACHE: Lazy<EmbeddingCache> = Lazy::new(|| EmbeddingCache::new(50_000, 86400));
 
-static QUERY_CACHE: Lazy<QueryResultCache> = Lazy::new(|| QueryResultCache::new(10_000, 300));
+#[allow(dead_code)]
+static QUERY_CACHE: Lazy<QueryResultCache> =
+    Lazy::new(|| QueryResultCache::new(10_000, 300));
 
 fn engine_err_to_py(e: crate::error::EngineError) -> PyErr {
     PyRuntimeError::new_err(e.to_string())
@@ -215,13 +216,13 @@ fn py_index_add_batch(
 }
 
 #[pyfunction]
-#[pyo3(signature = (index_id, query, k, ef = None, filter_json = None))]
+#[pyo3(signature = (index_id, query, k, ef = None, _filter_json = None))]
 fn py_index_search(
     index_id: &str,
     query: Vec<f32>,
     k: usize,
     ef: Option<usize>,
-    filter_json: Option<String>,
+    _filter_json: Option<String>,
 ) -> PyResult<Vec<(String, f32)>> {
     let indexes = VECTOR_INDEXES.lock();
     let index = indexes
@@ -257,7 +258,7 @@ fn py_index_stats(py: Python, index_id: &str) -> PyResult<PyObject> {
         .get(index_id)
         .ok_or_else(|| PyValueError::new_err(format!("Index '{}' not found", index_id)))?;
     let stats = index.stats();
-    let dict = PyDict::new(py);
+    let dict = PyDict::new_bound(py);
     dict.set_item("num_vectors", stats.num_vectors)?;
     dict.set_item("dimension", stats.dimension)?;
     dict.set_item("metric", stats.metric.to_string())?;
@@ -517,7 +518,7 @@ fn py_embedding_cache_clear() {
 #[pyfunction]
 fn py_embedding_cache_stats(py: Python) -> PyResult<PyObject> {
     let stats = EMBEDDING_CACHE.stats();
-    let dict = PyDict::new(py);
+    let dict = PyDict::new_bound(py);
     dict.set_item("hits", stats.hits)?;
     dict.set_item("misses", stats.misses)?;
     dict.set_item("evictions", stats.evictions)?;
@@ -539,7 +540,7 @@ fn py_engine_name() -> &'static str {
 }
 
 #[pymodule]
-fn neuralcore_engine(py: Python, m: &PyModule) -> PyResult<()> {
+fn neuralcore_engine(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_cosine_similarity, m)?)?;
     m.add_function(wrap_pyfunction!(py_dot_product, m)?)?;
     m.add_function(wrap_pyfunction!(py_euclidean_distance, m)?)?;

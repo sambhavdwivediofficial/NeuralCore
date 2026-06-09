@@ -2,8 +2,9 @@
 
 use crate::error::{EngineError, EngineResult};
 use crate::types::{RankedResult, Score};
-use crate::utils::{min_max_normalize, reciprocal_rank_fusion, softmax};
-use rayon::prelude::*;
+// use crate::utils::{min_max_normalize, reciprocal_rank_fusion, softmax};
+use crate::utils::{min_max_normalize, softmax};
+// use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -395,7 +396,7 @@ pub fn rerank_with_cross_scores(
     indexed
         .into_iter()
         .enumerate()
-        .filter(|(_, (original_rank, (_, score)))| *score >= min_threshold)
+        .filter(|(_, (_original_rank, (_, score)))| *score >= min_threshold)
         .take(top_n)
         .map(|(new_rank, (original_rank, (id, score)))| RankedResult {
             id: id.clone(),

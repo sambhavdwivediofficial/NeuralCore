@@ -84,6 +84,7 @@ arrayvec = "0.7"
 ort = { version = "2.0.0-rc.2", optional = true, features = ["cuda", "tensorrt"] }
 clap = { version = "4.5", optional = true, features = ["derive", "env"] }
 tokio = { version = "1.36", optional = true, features = ["full"] }
+[target.'cfg(not(windows))'.dependencies]
 pprof = { version = "0.13", optional = true, features = ["flamegraph", "criterion"] }
 criterion = { version = "0.5", optional = true, features = ["html_reports"] }
 

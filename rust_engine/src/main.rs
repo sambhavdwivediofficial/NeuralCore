@@ -2,17 +2,14 @@
 
 #[cfg(feature = "cli")]
 mod cli {
-    use crate::cache::{EmbeddingCache, LruCache};
-    use crate::compression::{
-        compress, compress_vectors, decompress, decompress_vectors, CompressionAlgorithm,
-        CompressionConfig,
+    use neuralcore_engine::compression::{
+        compress, decompress, CompressionAlgorithm, CompressionConfig,
     };
-    use crate::reranker::{RerankerConfig, RerankerType, ScoreFusion};
-    use crate::similarity::{batch_cosine_similarity, cosine_similarity, top_k_by_similarity};
-    use crate::tokenizer::{count_tokens_approximate, TokenizerConfig, WhitespaceTokenizer};
-    use crate::types::DistanceMetric;
-    use crate::utils::{min_max_normalize, normalize_vector_new, reciprocal_rank_fusion};
-    use crate::vector_index::{IndexConfig, VectorIndex};
+    use neuralcore_engine::reranker::{RerankerConfig, RerankerType, ScoreFusion};
+    use neuralcore_engine::similarity::batch_cosine_similarity;
+    use neuralcore_engine::tokenizer::count_tokens_approximate;
+    use neuralcore_engine::types::DistanceMetric;
+    use neuralcore_engine::vector_index::{IndexConfig, VectorIndex};
     use clap::{Parser, Subcommand};
     use std::path::PathBuf;
     use std::time::Instant;
@@ -194,8 +191,8 @@ parallel execution via Rayon, and Python FFI via PyO3.
 
     fn cmd_info(use_json: bool) {
         let info = serde_json::json!({
-            "name": crate::NAME,
-            "version": crate::VERSION,
+            "name": neuralcore_engine::NAME,
+            "version": neuralcore_engine::VERSION,
             "build_profile": if cfg!(debug_assertions) { "debug" } else { "release" },
             "features": {
                 "simd": cfg!(feature = "simd"),
@@ -213,7 +210,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
             println!("{}", serde_json::to_string_pretty(&info).unwrap());
         } else {
             println!("NeuralCore Rust Engine");
-            println!("  Version      : {}", crate::VERSION);
+            println!("  Version      : {}", neuralcore_engine::VERSION);
             println!("  Build        : {}", if cfg!(debug_assertions) { "debug" } else { "release" });
             println!("  CPU Cores    : {} logical / {} physical", num_cpus::get(), num_cpus::get_physical());
             println!("  SIMD         : {}", cfg!(feature = "simd"));
@@ -247,7 +244,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
         };
 
         let start = Instant::now();
-        let score = crate::similarity::compute_similarity(&a, &b, metric, args.prenormalized);
+        let score = neuralcore_engine::similarity::compute_similarity(&a, &b, metric, args.prenormalized);
         let elapsed = start.elapsed();
 
         match score {
@@ -275,7 +272,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
         }
     }
 
-    fn cmd_index(args: IndexArgs, verbose: bool, use_json: bool) {
+    fn cmd_index(args: IndexArgs, _verbose: bool, use_json: bool) {
         match args.operation {
             IndexOperation::Smoketest {
                 num_vectors,
@@ -351,7 +348,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
                 "approximate_tokens": approx,
             });
             if let Some(max) = args.max_tokens {
-                let fits = crate::tokenizer::fits_in_context(&args.text, max, 2);
+                let fits = neuralcore_engine::tokenizer::fits_in_context(&args.text, max, 2);
                 result["fits_in_context"] = serde_json::Value::Bool(fits);
                 result["max_tokens"] = serde_json::Value::Number(max.into());
             }
@@ -360,7 +357,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
             println!("Text length      : {} chars", args.text.len());
             println!("Approx tokens    : {}", approx);
             if let Some(max) = args.max_tokens {
-                let fits = crate::tokenizer::fits_in_context(&args.text, max, 2);
+                let fits = neuralcore_engine::tokenizer::fits_in_context(&args.text, max, 2);
                 println!("Max tokens       : {}", max);
                 println!("Fits in context  : {}", fits);
             }
@@ -383,7 +380,7 @@ parallel execution via Rayon, and Python FFI via PyO3.
                     ..Default::default()
                 };
 
-                let start = Instant::now();
+                let _start = Instant::now();
                 match compress(&data, &config) {
                     Ok((compressed, stats)) => {
                         std::fs::write(&output, &compressed).unwrap_or_else(|e| {
@@ -610,11 +607,11 @@ parallel execution via Rayon, and Python FFI via PyO3.
         }
     }
 
-    fn bench_similarity(dim: usize, iterations: usize, target: &str) -> serde_json::Value {
+    fn bench_similarity(dim: usize, iterations: usize, _target: &str) -> serde_json::Value {
         let a: Vec<f32> = (0..dim).map(|i| (i as f32).sin()).collect();
         let b: Vec<f32> = (0..dim).map(|i| (i as f32).cos()).collect();
-        let a_norm = crate::utils::normalize_vector_new(&a);
-        let b_norm = crate::utils::normalize_vector_new(&b);
+        let a_norm = neuralcore_engine::utils::normalize_vector_new(&a);
+        let b_norm = neuralcore_engine::utils::normalize_vector_new(&b);
 
         let start = Instant::now();
         for _ in 0..iterations {
