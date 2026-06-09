@@ -254,7 +254,7 @@ pub mod utils {
         v.iter().map(|x| x * x).sum::<f32>().sqrt()
     }
 
-    pub fn normalize_vector(v: &mut Vec<f32>) {
+    pub fn normalize_vector(v: &mut [f32]) {
         let norm = l2_norm(v);
         if norm > f32::EPSILON {
             let inv_norm = 1.0 / norm;
@@ -275,7 +275,7 @@ pub mod utils {
     }
 
     pub fn clamp_score(score: f32) -> f32 {
-        score.max(-1.0).min(1.0)
+        score.clamp(-1.0, 1.0)
     }
 
     pub fn sigmoid(x: f32) -> f32 {

@@ -330,7 +330,7 @@ fn py_compute_ndcg(
 ) -> f32 {
     let results: Vec<RankedResult> = ranked_ids
         .into_iter()
-        .zip(ranked_scores.into_iter())
+        .zip(ranked_scores)
         .enumerate()
         .map(|(i, (id, score))| RankedResult {
             id,
@@ -352,7 +352,7 @@ fn py_compute_mrr(
 ) -> f32 {
     let results: Vec<RankedResult> = ranked_ids
         .into_iter()
-        .zip(ranked_scores.into_iter())
+        .zip(ranked_scores)
         .enumerate()
         .map(|(i, (id, score))| RankedResult {
             id,
@@ -375,7 +375,7 @@ fn py_compute_precision_at_k(
 ) -> f32 {
     let results: Vec<RankedResult> = ranked_ids
         .into_iter()
-        .zip(ranked_scores.into_iter())
+        .zip(ranked_scores)
         .enumerate()
         .map(|(i, (id, score))| RankedResult {
             id,

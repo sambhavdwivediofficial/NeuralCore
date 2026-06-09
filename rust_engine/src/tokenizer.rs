@@ -480,7 +480,7 @@ impl WordPieceTokenizer {
         s
     }
 
-    fn basic_tokenize<'a>(&self, text: &'a str) -> Vec<String> {
+    fn basic_tokenize(&self, text: &str) -> Vec<String> {
         let mut tokens = Vec::new();
 
         for word in text.unicode_words() {
@@ -553,8 +553,8 @@ impl WordPieceTokenizer {
     fn join_tokens(&self, tokens: &[&str]) -> String {
         let mut result = String::new();
         for token in tokens {
-            if token.starts_with(BPE_CONTINUATION) {
-                result.push_str(&token[BPE_CONTINUATION.len()..]);
+            if let Some(stripped) = token.strip_prefix(BPE_CONTINUATION) {
+                result.push_str(stripped);
             } else {
                 if !result.is_empty() {
                     result.push(' ');

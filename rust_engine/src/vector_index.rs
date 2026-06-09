@@ -125,8 +125,7 @@ impl HnswGraph {
         self.rng_state ^= self.rng_state >> 7;
         self.rng_state ^= self.rng_state << 17;
         let r = (self.rng_state as f64) / (u64::MAX as f64);
-        let level = (-r.ln() * HNSW_ML_FACTOR).floor() as usize;
-        level
+        (-r.ln() * HNSW_ML_FACTOR).floor() as usize
     }
 
     fn add(&mut self, external_id: String, mut vector: Vector) -> EngineResult<u64> {
@@ -446,6 +445,7 @@ pub struct VectorIndex {
     total_searches: Arc<std::sync::atomic::AtomicU64>,
 }
 
+type FilterFn = dyn Fn(&str, Option<&serde_json::Value>) -> bool;
 impl VectorIndex {
     pub fn new(config: IndexConfig) -> Self {
         let (hnsw, flat) = match &config.index_type {
@@ -534,7 +534,7 @@ impl VectorIndex {
         let metadata_list: Vec<Option<serde_json::Value>> =
             metadata.unwrap_or_else(|| vec![None; count]);
 
-        for ((id, vector), meta) in ids.into_iter().zip(vectors.into_iter()).zip(metadata_list) {
+        for ((id, vector), meta) in ids.into_iter().zip(vectors).zip(metadata_list) {
             self.add(id, vector, meta)?;
         }
 
@@ -546,7 +546,7 @@ impl VectorIndex {
         query: &[f32],
         k: usize,
         ef: Option<usize>,
-        filter: Option<&dyn Fn(&str, Option<&serde_json::Value>) -> bool>,
+        filter: Option<&FilterFn>,
     ) -> EngineResult<Vec<SearchResult>> {
         if query.len() != self.config.dimension {
             return Err(EngineError::DimensionMismatch {

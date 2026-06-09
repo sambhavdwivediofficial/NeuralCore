@@ -125,7 +125,7 @@ fn compress_lz4(data: &[u8]) -> EngineResult<Vec<u8>> {
         let compressed = lz4_flex::compress_prepend_size(data);
         let mut output = vec![1u8];
         output.extend_from_slice(&compressed);
-        return Ok(output);
+        Ok(output)
     }
     #[cfg(not(feature = "compression"))]
     {
@@ -154,7 +154,7 @@ fn compress_zstd(data: &[u8], level: i32) -> EngineResult<Vec<u8>> {
             .map_err(|e| EngineError::CompressionError(format!("Zstd compress error: {}", e)))?;
         let mut output = vec![2u8];
         output.extend_from_slice(&compressed);
-        return Ok(output);
+        Ok(output)
     }
     #[cfg(not(feature = "compression"))]
     {
@@ -187,7 +187,7 @@ fn compress_snappy(data: &[u8]) -> EngineResult<Vec<u8>> {
             .map_err(|e| EngineError::CompressionError(format!("Snappy flush error: {}", e)))?;
         let mut output = vec![3u8];
         output.extend_from_slice(&compressed);
-        return Ok(output);
+        Ok(output)
     }
     #[cfg(not(feature = "compression"))]
     {
@@ -205,7 +205,7 @@ fn decompress_snappy(data: &[u8]) -> EngineResult<Vec<u8>> {
         use std::io::Read;
         decoder.read_to_end(&mut output)
             .map_err(|e| EngineError::CompressionError(format!("Snappy decompress error: {}", e)))?;
-        return Ok(output);
+        Ok(output)
     }
     #[cfg(not(feature = "compression"))]
     {
