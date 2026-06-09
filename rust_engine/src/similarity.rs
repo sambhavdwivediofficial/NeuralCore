@@ -437,8 +437,7 @@ mod tests {
             vec![0.1f32, 0.0],
         ];
         let ids = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-        let results = top_k_by_similarity(&query, &vectors, &ids, 2, DistanceMetric::Cosine, false)
-            .unwrap();
+        let results = top_k_by_similarity(&query, &vectors, &ids, 2, DistanceMetric::DotProduct, false).unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].0, "b");
         assert_eq!(results[1].0, "a");

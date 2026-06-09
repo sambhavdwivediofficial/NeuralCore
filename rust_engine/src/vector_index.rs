@@ -203,21 +203,37 @@ impl HnswGraph {
             for &neighbor_id in &selected {
                 if (neighbor_id as usize) < self.nodes.len() {
                     let neighbor_m = m_at_level(lc);
-                    let neighbor = &mut self.nodes[neighbor_id as usize];
-                    if lc < neighbor.neighbors.len() {
-                        if !neighbor.neighbors[lc].contains(&internal_id) {
-                            neighbor.neighbors[lc].push(internal_id);
-                        }
-                        if neighbor.neighbors[lc].len() > neighbor_m {
-                            let neighbor_vec = neighbor.vector.clone();
-                            let to_keep = self.select_neighbors_prune(
-                                &neighbor_vec,
-                                &neighbor.neighbors[lc].iter().copied().collect::<Vec<_>>(),
-                                neighbor_m,
-                            );
-                            neighbor.neighbors[lc] = to_keep.into_iter().collect();
+            
+                    let neighbor_vec;
+                    let neighbor_list;
+            
+                    {
+                        let neighbor = &mut self.nodes[neighbor_id as usize];
+            
+                        if lc < neighbor.neighbors.len() {
+                            if !neighbor.neighbors[lc].contains(&internal_id) {
+                                neighbor.neighbors[lc].push(internal_id);
+                            }
+            
+                            if neighbor.neighbors[lc].len() <= neighbor_m {
+                                continue;
+                            }
+            
+                            neighbor_vec = neighbor.vector.clone();
+                            neighbor_list = neighbor.neighbors[lc].clone();
+                        } else {
+                            continue;
                         }
                     }
+            
+                    let to_keep = self.select_neighbors_prune(
+                        &neighbor_vec,
+                        &neighbor_list,
+                        neighbor_m,
+                    );
+            
+                    self.nodes[neighbor_id as usize].neighbors[lc] =
+                        to_keep.into_iter().collect();
                 }
             }
 

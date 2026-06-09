@@ -37,8 +37,8 @@ benchmarks = ["criterion"]
 pyo3 = { version = "0.21", features = ["extension-module", "abi3-py311"], optional = true }
 numpy = { version = "0.21", optional = true }
 
-ndarray = { version = "0.15", features = ["rayon", "serde"] }
-ndarray-linalg = { version = "0.16", features = ["openblas-static"] }
+ndarray = { version = "0.17", features = ["rayon", "serde"] }
+ndarray-linalg = { version = "0.18", features = ["openblas-system"] }
 rayon = "1.10"
 num_cpus = "1.16"
 

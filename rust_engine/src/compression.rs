@@ -57,9 +57,12 @@ pub fn compress(data: &[u8], config: &CompressionConfig) -> EngineResult<(Vec<u8
     if data.len() < config.min_size_to_compress {
         let mut output = vec![0u8];
         output.extend_from_slice(data);
+    
+        let compressed_size = output.len() - 1;
+    
         return Ok((output, CompressionStats {
             original_size_bytes: data.len(),
-            compressed_size_bytes: output.len() - 1,
+            compressed_size_bytes: compressed_size,
             compression_ratio: 1.0,
             algorithm: "none".to_string(),
             duration_micros: 0,
@@ -301,8 +304,9 @@ pub fn quantize_scalar_i8(
     let mut sorted = all_values.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-    let lower_idx = ((1.0 - quantile) * (sorted.len() as f32 - 1.0)) as usize;
-    let upper_idx = (quantile * (sorted.len() as f32 - 1.0)) as usize;
+    let lower_idx = (((1.0 - quantile) * (sorted.len() as f32 - 1.0)).floor()) as usize;
+    let upper_idx = (((quantile * (sorted.len() as f32 - 1.0)).ceil()) as usize)
+        .min(sorted.len() - 1);
     let min_val = sorted[lower_idx.min(sorted.len() - 1)];
     let max_val = sorted[upper_idx.min(sorted.len() - 1)];
 

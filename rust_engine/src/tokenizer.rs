@@ -360,7 +360,7 @@ impl WordPieceTokenizer {
         let mut all_token_type_ids: Vec<Vec<u8>> = Vec::new();
 
         for output in outputs {
-            let n = output.num_tokens;
+            let n = output.input_ids.len();
             all_num_tokens.push(n);
             all_was_truncated.push(output.was_truncated);
 
