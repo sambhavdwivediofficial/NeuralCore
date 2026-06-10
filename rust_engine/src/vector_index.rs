@@ -6,9 +6,9 @@ use crate::similarity::batch_similarity;
 use crate::types::{DistanceMetric, IndexStats, SearchResult, Vector};
 use crate::utils::{normalize_vector, validate_vector};
 use dashmap::DashMap;
+use ordered_float::OrderedFloat;
 use parking_lot::RwLock;
 use priority_queue::PriorityQueue;
-use ordered_float::OrderedFloat;
 // use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
@@ -154,7 +154,13 @@ impl HnswGraph {
         self.next_id += 1;
 
         let level = self.random_level();
-        let m_at_level = |l: usize| if l == 0 { self.config.m_max0 } else { self.config.m };
+        let m_at_level = |l: usize| {
+            if l == 0 {
+                self.config.m_max0
+            } else {
+                self.config.m
+            }
+        };
 
         let mut neighbors = Vec::with_capacity(level + 1);
         for l in 0..=level {
@@ -187,7 +193,8 @@ impl HnswGraph {
         }
 
         for lc in (0..=level.min(self.max_level)).rev() {
-            let candidates = self.search_layer(&vector, ep.clone(), self.config.ef_construction, lc);
+            let candidates =
+                self.search_layer(&vector, ep.clone(), self.config.ef_construction, lc);
             let m = m_at_level(lc);
             let selected = self.select_neighbors(&vector, &candidates, m, lc, true);
 
@@ -203,37 +210,33 @@ impl HnswGraph {
             for &neighbor_id in &selected {
                 if (neighbor_id as usize) < self.nodes.len() {
                     let neighbor_m = m_at_level(lc);
-            
+
                     let neighbor_vec;
                     let neighbor_list;
-            
+
                     {
                         let neighbor = &mut self.nodes[neighbor_id as usize];
-            
+
                         if lc < neighbor.neighbors.len() {
                             if !neighbor.neighbors[lc].contains(&internal_id) {
                                 neighbor.neighbors[lc].push(internal_id);
                             }
-            
+
                             if neighbor.neighbors[lc].len() <= neighbor_m {
                                 continue;
                             }
-            
+
                             neighbor_vec = neighbor.vector.clone();
                             neighbor_list = neighbor.neighbors[lc].clone();
                         } else {
                             continue;
                         }
                     }
-            
-                    let to_keep = self.select_neighbors_prune(
-                        &neighbor_vec,
-                        &neighbor_list,
-                        neighbor_m,
-                    );
-            
-                    self.nodes[neighbor_id as usize].neighbors[lc] =
-                        to_keep.into_iter().collect();
+
+                    let to_keep =
+                        self.select_neighbors_prune(&neighbor_vec, &neighbor_list, neighbor_m);
+
+                    self.nodes[neighbor_id as usize].neighbors[lc] = to_keep.into_iter().collect();
                 }
             }
 
@@ -281,9 +284,7 @@ impl HnswGraph {
             })
             .collect();
 
-        results.sort_unstable_by(|a, b| {
-            b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        results.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         results.truncate(k);
 
         Ok(results)
@@ -405,9 +406,7 @@ impl HnswGraph {
             })
             .collect();
 
-        scored.sort_unstable_by(|a, b| {
-            b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        scored.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         scored.truncate(m);
         scored.into_iter().map(|(id, _)| id).collect()
     }
@@ -452,10 +451,7 @@ impl VectorIndex {
             IndexType::Hnsw | IndexType::IvfFlat { .. } => {
                 (Some(RwLock::new(HnswGraph::new(config.clone()))), None)
             }
-            IndexType::Flat => (
-                None,
-                Some(RwLock::new(Vec::new())),
-            ),
+            IndexType::Flat => (None, Some(RwLock::new(Vec::new()))),
         };
 
         Self {
@@ -513,7 +509,9 @@ impl VectorIndex {
             return Ok(());
         }
 
-        Err(EngineError::IndexError("No index backend initialized".to_string()))
+        Err(EngineError::IndexError(
+            "No index backend initialized".to_string(),
+        ))
     }
 
     pub fn add_batch(
@@ -576,7 +574,10 @@ impl VectorIndex {
                     if node.deleted {
                         return None;
                     }
-                    let meta = self.external_to_metadata.get(&node.external_id).map(|r| r.clone());
+                    let meta = self
+                        .external_to_metadata
+                        .get(&node.external_id)
+                        .map(|r| r.clone());
                     if let Some(ref f) = filter {
                         if !f(&node.external_id, meta.as_ref()) {
                             return None;
@@ -591,7 +592,9 @@ impl VectorIndex {
                 .collect();
 
             results.sort_unstable_by(|a, b| {
-                b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal)
+                b.score
+                    .partial_cmp(&a.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
             return Ok(results);
         }
@@ -640,7 +643,9 @@ impl VectorIndex {
             return Ok(results);
         }
 
-        Err(EngineError::IndexError("No index backend initialized".to_string()))
+        Err(EngineError::IndexError(
+            "No index backend initialized".to_string(),
+        ))
     }
 
     pub fn delete(&self, id: &str) -> EngineResult<bool> {
@@ -681,9 +686,7 @@ impl VectorIndex {
         }
         if let Some(flat) = &self.flat_entries {
             let entries = flat.read();
-            return entries
-                .iter()
-                .any(|e| e.external_id == id && !e.deleted);
+            return entries.iter().any(|e| e.external_id == id && !e.deleted);
         }
         false
     }
@@ -720,8 +723,8 @@ impl VectorIndex {
             (None, None)
         };
 
-        let memory_bytes = num_vectors * self.config.dimension * std::mem::size_of::<f32>()
-            + num_vectors * 64;
+        let memory_bytes =
+            num_vectors * self.config.dimension * std::mem::size_of::<f32>() + num_vectors * 64;
 
         IndexStats {
             num_vectors,
@@ -759,7 +762,8 @@ impl VectorIndex {
     }
 
     pub fn total_searches(&self) -> u64 {
-        self.total_searches.load(std::sync::atomic::Ordering::Relaxed)
+        self.total_searches
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 }
 
@@ -782,9 +786,15 @@ mod tests {
     #[test]
     fn test_flat_add_and_search() {
         let index = make_flat_index(3);
-        index.add("a".to_string(), vec![1.0, 0.0, 0.0], None).unwrap();
-        index.add("b".to_string(), vec![0.0, 1.0, 0.0], None).unwrap();
-        index.add("c".to_string(), vec![0.0, 0.0, 1.0], None).unwrap();
+        index
+            .add("a".to_string(), vec![1.0, 0.0, 0.0], None)
+            .unwrap();
+        index
+            .add("b".to_string(), vec![0.0, 1.0, 0.0], None)
+            .unwrap();
+        index
+            .add("c".to_string(), vec![0.0, 0.0, 1.0], None)
+            .unwrap();
 
         let results = index.search(&[1.0, 0.0, 0.0], 1, None, None).unwrap();
         assert_eq!(results.len(), 1);
@@ -795,8 +805,12 @@ mod tests {
     #[test]
     fn test_flat_delete() {
         let index = make_flat_index(3);
-        index.add("a".to_string(), vec![1.0, 0.0, 0.0], None).unwrap();
-        index.add("b".to_string(), vec![1.0, 0.0, 0.0], None).unwrap();
+        index
+            .add("a".to_string(), vec![1.0, 0.0, 0.0], None)
+            .unwrap();
+        index
+            .add("b".to_string(), vec![1.0, 0.0, 0.0], None)
+            .unwrap();
         assert!(index.delete("a").unwrap());
         assert!(!index.contains("a"));
         assert!(index.contains("b"));
@@ -813,7 +827,9 @@ mod tests {
     #[test]
     fn test_dimension_mismatch_on_search() {
         let index = make_flat_index(3);
-        index.add("a".to_string(), vec![1.0, 0.0, 0.0], None).unwrap();
+        index
+            .add("a".to_string(), vec![1.0, 0.0, 0.0], None)
+            .unwrap();
         let result = index.search(&[1.0, 0.0], 1, None, None);
         assert!(result.is_err());
     }
@@ -829,11 +845,7 @@ mod tests {
     fn test_batch_add() {
         let index = make_flat_index(2);
         let ids = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-        let vectors = vec![
-            vec![1.0f32, 0.0],
-            vec![0.0f32, 1.0],
-            vec![0.707f32, 0.707],
-        ];
+        let vectors = vec![vec![1.0f32, 0.0], vec![0.0f32, 1.0], vec![0.707f32, 0.707]];
         let count = index.add_batch(ids, vectors, None).unwrap();
         assert_eq!(count, 3);
         assert_eq!(index.len(), 3);
@@ -855,8 +867,12 @@ mod tests {
     #[test]
     fn test_stats_accuracy() {
         let index = make_flat_index(4);
-        index.add("a".to_string(), vec![1.0, 0.0, 0.0, 0.0], None).unwrap();
-        index.add("b".to_string(), vec![0.0, 1.0, 0.0, 0.0], None).unwrap();
+        index
+            .add("a".to_string(), vec![1.0, 0.0, 0.0, 0.0], None)
+            .unwrap();
+        index
+            .add("b".to_string(), vec![0.0, 1.0, 0.0, 0.0], None)
+            .unwrap();
         let stats = index.stats();
         assert_eq!(stats.num_vectors, 2);
         assert_eq!(stats.dimension, 4);

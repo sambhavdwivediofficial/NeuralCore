@@ -88,10 +88,7 @@ impl ScoreFusion {
         Self { config }
     }
 
-    pub fn fuse(
-        &self,
-        ranked_lists: &[Vec<(String, Score)>],
-    ) -> EngineResult<Vec<ScoredDocument>> {
+    pub fn fuse(&self, ranked_lists: &[Vec<(String, Score)>]) -> EngineResult<Vec<ScoredDocument>> {
         if ranked_lists.is_empty() {
             return Ok(Vec::new());
         }
@@ -141,14 +138,16 @@ impl ScoreFusion {
 
         let mut results: Vec<ScoredDocument> = id_to_scores
             .into_iter()
-            .map(|(id, (score, source_scores, source_ranks))| ScoredDocument {
-                id,
-                score,
-                rank: 0,
-                source_scores,
-                source_ranks,
-                metadata: None,
-            })
+            .map(
+                |(id, (score, source_scores, source_ranks))| ScoredDocument {
+                    id,
+                    score,
+                    rank: 0,
+                    source_scores,
+                    source_ranks,
+                    metadata: None,
+                },
+            )
             .collect();
 
         self.finalize_results(&mut results);
@@ -193,14 +192,16 @@ impl ScoreFusion {
 
         let mut results: Vec<ScoredDocument> = id_to_data
             .into_iter()
-            .map(|(id, (score, source_scores, source_ranks))| ScoredDocument {
-                id,
-                score,
-                rank: 0,
-                source_scores,
-                source_ranks,
-                metadata: None,
-            })
+            .map(
+                |(id, (score, source_scores, source_ranks))| ScoredDocument {
+                    id,
+                    score,
+                    rank: 0,
+                    source_scores,
+                    source_ranks,
+                    metadata: None,
+                },
+            )
             .collect();
 
         self.finalize_results(&mut results);
@@ -236,14 +237,16 @@ impl ScoreFusion {
 
         let mut results: Vec<ScoredDocument> = id_to_data
             .into_iter()
-            .map(|(id, (score, source_scores, source_ranks))| ScoredDocument {
-                id,
-                score,
-                rank: 0,
-                source_scores,
-                source_ranks,
-                metadata: None,
-            })
+            .map(
+                |(id, (score, source_scores, source_ranks))| ScoredDocument {
+                    id,
+                    score,
+                    rank: 0,
+                    source_scores,
+                    source_ranks,
+                    metadata: None,
+                },
+            )
             .collect();
 
         self.finalize_results(&mut results);
@@ -272,14 +275,16 @@ impl ScoreFusion {
 
         let mut results: Vec<ScoredDocument> = id_to_data
             .into_iter()
-            .map(|(id, (score, source_scores, source_ranks))| ScoredDocument {
-                id,
-                score,
-                rank: 0,
-                source_scores,
-                source_ranks,
-                metadata: None,
-            })
+            .map(
+                |(id, (score, source_scores, source_ranks))| ScoredDocument {
+                    id,
+                    score,
+                    rank: 0,
+                    source_scores,
+                    source_ranks,
+                    metadata: None,
+                },
+            )
             .collect();
 
         self.finalize_results(&mut results);
@@ -315,14 +320,16 @@ impl ScoreFusion {
 
         let mut results: Vec<ScoredDocument> = id_to_data
             .into_iter()
-            .map(|(id, (score, source_scores, source_ranks))| ScoredDocument {
-                id,
-                score,
-                rank: 0,
-                source_scores,
-                source_ranks,
-                metadata: None,
-            })
+            .map(
+                |(id, (score, source_scores, source_ranks))| ScoredDocument {
+                    id,
+                    score,
+                    rank: 0,
+                    source_scores,
+                    source_ranks,
+                    metadata: None,
+                },
+            )
             .collect();
 
         self.finalize_results(&mut results);
@@ -341,8 +348,8 @@ impl ScoreFusion {
                     return Vec::new();
                 }
                 let mean = scores.iter().sum::<f32>() / scores.len() as f32;
-                let variance = scores.iter().map(|&s| (s - mean).powi(2)).sum::<f32>()
-                    / scores.len() as f32;
+                let variance =
+                    scores.iter().map(|&s| (s - mean).powi(2)).sum::<f32>() / scores.len() as f32;
                 let std_dev = variance.sqrt();
                 if std_dev < f32::EPSILON {
                     return vec![0.0; scores.len()];
@@ -367,11 +374,7 @@ impl ScoreFusion {
     fn finalize_results(&self, results: &mut Vec<ScoredDocument>) {
         results.retain(|r| r.score >= self.config.min_score_threshold);
 
-        results.sort_unstable_by(|a, b| {
-            b.score
-                .partial_cmp(&a.score)
-                .unwrap_or(Ordering::Equal)
-        });
+        results.sort_unstable_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(Ordering::Equal));
 
         results.truncate(self.config.top_n);
 
@@ -386,12 +389,9 @@ pub fn rerank_with_cross_scores(
     top_n: usize,
     min_threshold: f32,
 ) -> Vec<RankedResult> {
-    let mut indexed: Vec<(usize, &(String, Score))> =
-        query_doc_scores.iter().enumerate().collect();
+    let mut indexed: Vec<(usize, &(String, Score))> = query_doc_scores.iter().enumerate().collect();
 
-    indexed.sort_unstable_by(|a, b| {
-        b.1 .1.partial_cmp(&a.1 .1).unwrap_or(Ordering::Equal)
-    });
+    indexed.sort_unstable_by(|a, b| b.1 .1.partial_cmp(&a.1 .1).unwrap_or(Ordering::Equal));
 
     indexed
         .into_iter()
@@ -408,7 +408,10 @@ pub fn rerank_with_cross_scores(
         .collect()
 }
 
-pub fn compute_mrr(ranked_results: &[RankedResult], relevant_ids: &std::collections::HashSet<String>) -> f32 {
+pub fn compute_mrr(
+    ranked_results: &[RankedResult],
+    relevant_ids: &std::collections::HashSet<String>,
+) -> f32 {
     for result in ranked_results {
         if relevant_ids.contains(&result.id) {
             return 1.0 / result.rank as f32;
@@ -431,15 +434,17 @@ pub fn compute_ndcg(
         .iter()
         .enumerate()
         .map(|(i, r)| {
-            let rel = if relevant_ids.contains(&r.id) { 1.0f32 } else { 0.0 };
+            let rel = if relevant_ids.contains(&r.id) {
+                1.0f32
+            } else {
+                0.0
+            };
             rel / (i as f32 + 2.0).log2()
         })
         .sum();
 
     let ideal_k = k.min(relevant_ids.len());
-    let idcg: f32 = (0..ideal_k)
-        .map(|i| 1.0f32 / (i as f32 + 2.0).log2())
-        .sum();
+    let idcg: f32 = (0..ideal_k).map(|i| 1.0f32 / (i as f32 + 2.0).log2()).sum();
 
     if idcg < f32::EPSILON {
         return 0.0;
@@ -513,10 +518,7 @@ mod tests {
     #[test]
     fn test_rrf_rank_assignment() {
         let fusion = make_rrf_fusion();
-        let list = vec![
-            ("a".to_string(), 0.9),
-            ("b".to_string(), 0.5),
-        ];
+        let list = vec![("a".to_string(), 0.9), ("b".to_string(), 0.5)];
         let results = fusion.fuse(&[list]).unwrap();
         assert_eq!(results[0].rank, 1);
         assert_eq!(results[1].rank, 2);
@@ -534,8 +536,16 @@ mod tests {
         let list1 = vec![("doc_a".to_string(), 1.0f32)];
         let list2 = vec![("doc_b".to_string(), 1.0f32)];
         let results = fusion.fuse(&[list1, list2]).unwrap();
-        let score_a = results.iter().find(|r| r.id == "doc_a").map(|r| r.score).unwrap_or(0.0);
-        let score_b = results.iter().find(|r| r.id == "doc_b").map(|r| r.score).unwrap_or(0.0);
+        let score_a = results
+            .iter()
+            .find(|r| r.id == "doc_a")
+            .map(|r| r.score)
+            .unwrap_or(0.0);
+        let score_b = results
+            .iter()
+            .find(|r| r.id == "doc_b")
+            .map(|r| r.score)
+            .unwrap_or(0.0);
         assert!(score_a > score_b);
     }
 
@@ -563,8 +573,20 @@ mod tests {
     #[test]
     fn test_ndcg_perfect_ranking() {
         let results = vec![
-            RankedResult { id: "a".to_string(), rank: 1, score: 1.0, original_score: None, original_rank: None },
-            RankedResult { id: "b".to_string(), rank: 2, score: 0.8, original_score: None, original_rank: None },
+            RankedResult {
+                id: "a".to_string(),
+                rank: 1,
+                score: 1.0,
+                original_score: None,
+                original_rank: None,
+            },
+            RankedResult {
+                id: "b".to_string(),
+                rank: 2,
+                score: 0.8,
+                original_score: None,
+                original_rank: None,
+            },
         ];
         let relevant: std::collections::HashSet<String> =
             vec!["a".to_string(), "b".to_string()].into_iter().collect();
@@ -575,9 +597,27 @@ mod tests {
     #[test]
     fn test_precision_at_k() {
         let results = vec![
-            RankedResult { id: "a".to_string(), rank: 1, score: 1.0, original_score: None, original_rank: None },
-            RankedResult { id: "b".to_string(), rank: 2, score: 0.8, original_score: None, original_rank: None },
-            RankedResult { id: "c".to_string(), rank: 3, score: 0.6, original_score: None, original_rank: None },
+            RankedResult {
+                id: "a".to_string(),
+                rank: 1,
+                score: 1.0,
+                original_score: None,
+                original_rank: None,
+            },
+            RankedResult {
+                id: "b".to_string(),
+                rank: 2,
+                score: 0.8,
+                original_score: None,
+                original_rank: None,
+            },
+            RankedResult {
+                id: "c".to_string(),
+                rank: 3,
+                score: 0.6,
+                original_score: None,
+                original_rank: None,
+            },
         ];
         let relevant: std::collections::HashSet<String> =
             vec!["a".to_string(), "c".to_string()].into_iter().collect();
@@ -587,9 +627,13 @@ mod tests {
 
     #[test]
     fn test_mrr_first_relevant() {
-        let results = vec![
-            RankedResult { id: "a".to_string(), rank: 1, score: 1.0, original_score: None, original_rank: None },
-        ];
+        let results = vec![RankedResult {
+            id: "a".to_string(),
+            rank: 1,
+            score: 1.0,
+            original_score: None,
+            original_rank: None,
+        }];
         let relevant: std::collections::HashSet<String> =
             vec!["a".to_string()].into_iter().collect();
         let mrr = compute_mrr(&results, &relevant);

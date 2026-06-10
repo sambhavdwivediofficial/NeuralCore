@@ -300,10 +300,15 @@ where
     pub fn insert(&self, key: K, value: V, ttl: Option<Duration>, size_bytes: usize) {
         let effective_ttl = ttl.or(self.default_ttl);
 
-        if let Some(old) = self.entries.insert(key, CacheEntry::new(value, effective_ttl, size_bytes)) {
-            self.current_size_bytes.fetch_sub(old.size_bytes, Ordering::Relaxed);
+        if let Some(old) = self
+            .entries
+            .insert(key, CacheEntry::new(value, effective_ttl, size_bytes))
+        {
+            self.current_size_bytes
+                .fetch_sub(old.size_bytes, Ordering::Relaxed);
         }
-        self.current_size_bytes.fetch_add(size_bytes, Ordering::Relaxed);
+        self.current_size_bytes
+            .fetch_add(size_bytes, Ordering::Relaxed);
 
         while self.entries.len() > self.capacity {
             self.evict_lfu();
@@ -312,7 +317,8 @@ where
 
     pub fn remove(&self, key: &K) -> Option<V> {
         self.entries.remove(key).map(|(_, e)| {
-            self.current_size_bytes.fetch_sub(e.size_bytes, Ordering::Relaxed);
+            self.current_size_bytes
+                .fetch_sub(e.size_bytes, Ordering::Relaxed);
             e.value
         })
     }
@@ -340,7 +346,11 @@ where
             evictions: self.evictions.load(Ordering::Relaxed),
             current_size: self.entries.len(),
             capacity: self.capacity,
-            hit_rate: if total > 0 { hits as f64 / total as f64 } else { 0.0 },
+            hit_rate: if total > 0 {
+                hits as f64 / total as f64
+            } else {
+                0.0
+            },
             memory_bytes: self.current_size_bytes.load(Ordering::Relaxed),
         }
     }
@@ -354,7 +364,8 @@ where
 
         if let Some(key) = min_key {
             if let Some((_, entry)) = self.entries.remove(&key) {
-                self.current_size_bytes.fetch_sub(entry.size_bytes, Ordering::Relaxed);
+                self.current_size_bytes
+                    .fetch_sub(entry.size_bytes, Ordering::Relaxed);
                 self.evictions.fetch_add(1, Ordering::Relaxed);
             }
         }
@@ -560,8 +571,7 @@ mod tests {
 
     #[test]
     fn test_lru_ttl_expiry() {
-        let cache: LruCache<String, i32> =
-            LruCache::new(10, Some(Duration::from_millis(1)));
+        let cache: LruCache<String, i32> = LruCache::new(10, Some(Duration::from_millis(1)));
         cache.insert("key".to_string(), 99, None, 4);
         std::thread::sleep(Duration::from_millis(5));
         assert_eq!(cache.get(&"key".to_string()), None);

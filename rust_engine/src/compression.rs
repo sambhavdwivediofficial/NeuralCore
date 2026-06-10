@@ -43,45 +43,48 @@ impl Default for CompressionConfig {
     }
 }
 
-pub fn compress(data: &[u8], config: &CompressionConfig) -> EngineResult<(Vec<u8>, CompressionStats)> {
+pub fn compress(
+    data: &[u8],
+    config: &CompressionConfig,
+) -> EngineResult<(Vec<u8>, CompressionStats)> {
     if data.is_empty() {
-        return Ok((Vec::new(), CompressionStats {
-            original_size_bytes: 0,
-            compressed_size_bytes: 0,
-            compression_ratio: 1.0,
-            algorithm: config.algorithm.to_string(),
-            duration_micros: 0,
-        }));
+        return Ok((
+            Vec::new(),
+            CompressionStats {
+                original_size_bytes: 0,
+                compressed_size_bytes: 0,
+                compression_ratio: 1.0,
+                algorithm: config.algorithm.to_string(),
+                duration_micros: 0,
+            },
+        ));
     }
 
     if data.len() < config.min_size_to_compress {
         let mut output = vec![0u8];
         output.extend_from_slice(data);
-    
+
         let compressed_size = output.len() - 1;
-    
-        return Ok((output, CompressionStats {
-            original_size_bytes: data.len(),
-            compressed_size_bytes: compressed_size,
-            compression_ratio: 1.0,
-            algorithm: "none".to_string(),
-            duration_micros: 0,
-        }));
+
+        return Ok((
+            output,
+            CompressionStats {
+                original_size_bytes: data.len(),
+                compressed_size_bytes: compressed_size,
+                compression_ratio: 1.0,
+                algorithm: "none".to_string(),
+                duration_micros: 0,
+            },
+        ));
     }
 
     let start = Instant::now();
     let original_size = data.len();
 
     let compressed = match config.algorithm {
-        CompressionAlgorithm::Lz4 => {
-            compress_lz4(data)?
-        }
-        CompressionAlgorithm::Zstd => {
-            compress_zstd(data, config.zstd_level)?
-        }
-        CompressionAlgorithm::Snappy => {
-            compress_snappy(data)?
-        }
+        CompressionAlgorithm::Lz4 => compress_lz4(data)?,
+        CompressionAlgorithm::Zstd => compress_zstd(data, config.zstd_level)?,
+        CompressionAlgorithm::Snappy => compress_snappy(data)?,
         CompressionAlgorithm::None => {
             let mut output = vec![0u8];
             output.extend_from_slice(data);
@@ -93,13 +96,16 @@ pub fn compress(data: &[u8], config: &CompressionConfig) -> EngineResult<(Vec<u8
     let compressed_size = compressed.len();
     let ratio = original_size as f64 / compressed_size as f64;
 
-    Ok((compressed, CompressionStats {
-        original_size_bytes: original_size,
-        compressed_size_bytes: compressed_size,
-        compression_ratio: ratio,
-        algorithm: config.algorithm.to_string(),
-        duration_micros: duration,
-    }))
+    Ok((
+        compressed,
+        CompressionStats {
+            original_size_bytes: original_size,
+            compressed_size_bytes: compressed_size,
+            compression_ratio: ratio,
+            algorithm: config.algorithm.to_string(),
+            duration_micros: duration,
+        },
+    ))
 }
 
 pub fn decompress(data: &[u8], config: &CompressionConfig) -> EngineResult<Vec<u8>> {
@@ -181,9 +187,11 @@ fn compress_snappy(data: &[u8]) -> EngineResult<Vec<u8>> {
     {
         let mut encoder = snap::write::FrameEncoder::new(Vec::new());
         use std::io::Write;
-        encoder.write_all(data)
+        encoder
+            .write_all(data)
             .map_err(|e| EngineError::CompressionError(format!("Snappy compress error: {}", e)))?;
-        let compressed = encoder.into_inner()
+        let compressed = encoder
+            .into_inner()
             .map_err(|e| EngineError::CompressionError(format!("Snappy flush error: {}", e)))?;
         let mut output = vec![3u8];
         output.extend_from_slice(&compressed);
@@ -203,8 +211,9 @@ fn decompress_snappy(data: &[u8]) -> EngineResult<Vec<u8>> {
         let mut decoder = snap::read::FrameDecoder::new(data);
         let mut output = Vec::new();
         use std::io::Read;
-        decoder.read_to_end(&mut output)
-            .map_err(|e| EngineError::CompressionError(format!("Snappy decompress error: {}", e)))?;
+        decoder.read_to_end(&mut output).map_err(|e| {
+            EngineError::CompressionError(format!("Snappy decompress error: {}", e))
+        })?;
         Ok(output)
     }
     #[cfg(not(feature = "compression"))]
@@ -218,13 +227,16 @@ pub fn compress_vectors(
     config: &CompressionConfig,
 ) -> EngineResult<(Vec<u8>, CompressionStats)> {
     if vectors.is_empty() {
-        return Ok((Vec::new(), CompressionStats {
-            original_size_bytes: 0,
-            compressed_size_bytes: 0,
-            compression_ratio: 1.0,
-            algorithm: config.algorithm.to_string(),
-            duration_micros: 0,
-        }));
+        return Ok((
+            Vec::new(),
+            CompressionStats {
+                original_size_bytes: 0,
+                compressed_size_bytes: 0,
+                compression_ratio: 1.0,
+                algorithm: config.algorithm.to_string(),
+                duration_micros: 0,
+            },
+        ));
     }
 
     let n = vectors.len();
@@ -241,10 +253,7 @@ pub fn compress_vectors(
     compress(&raw, config)
 }
 
-pub fn decompress_vectors(
-    data: &[u8],
-    config: &CompressionConfig,
-) -> EngineResult<Vec<Vec<f32>>> {
+pub fn decompress_vectors(data: &[u8], config: &CompressionConfig) -> EngineResult<Vec<Vec<f32>>> {
     if data.is_empty() {
         return Ok(Vec::new());
     }
@@ -305,8 +314,8 @@ pub fn quantize_scalar_i8(
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let lower_idx = (((1.0 - quantile) * (sorted.len() as f32 - 1.0)).floor()) as usize;
-    let upper_idx = (((quantile * (sorted.len() as f32 - 1.0)).ceil()) as usize)
-        .min(sorted.len() - 1);
+    let upper_idx =
+        (((quantile * (sorted.len() as f32 - 1.0)).ceil()) as usize).min(sorted.len() - 1);
     let min_val = sorted[lower_idx.min(sorted.len() - 1)];
     let max_val = sorted[upper_idx.min(sorted.len() - 1)];
 
@@ -333,11 +342,7 @@ pub fn quantize_scalar_i8(
     Ok((quantized, min_val, max_val))
 }
 
-pub fn dequantize_scalar_i8(
-    quantized: &[Vec<i8>],
-    min_val: f32,
-    max_val: f32,
-) -> Vec<Vec<f32>> {
+pub fn dequantize_scalar_i8(quantized: &[Vec<i8>], min_val: f32, max_val: f32) -> Vec<Vec<f32>> {
     let range = max_val - min_val;
     quantized
         .iter()
@@ -364,7 +369,8 @@ mod tests {
     #[test]
     fn test_compress_decompress_roundtrip() {
         let config = default_config();
-        let data = b"hello world this is test data for compression roundtrip testing neuralcore engine";
+        let data =
+            b"hello world this is test data for compression roundtrip testing neuralcore engine";
         let (compressed, stats) = compress(data, &config).unwrap();
         let decompressed = decompress(&compressed, &config).unwrap();
         assert_eq!(&decompressed, data);
@@ -427,7 +433,12 @@ mod tests {
         let restored = dequantize_scalar_i8(&quantized, min_val, max_val);
         for (orig, rest) in vectors.iter().zip(restored.iter()) {
             for (&o, &r) in orig.iter().zip(rest.iter()) {
-                assert!((o - r).abs() < 0.05, "Quantization error too large: {} vs {}", o, r);
+                assert!(
+                    (o - r).abs() < 0.05,
+                    "Quantization error too large: {} vs {}",
+                    o,
+                    r
+                );
             }
         }
     }

@@ -190,31 +190,39 @@ impl WordPieceTokenizer {
     pub fn new(vocab: Vocabulary, config: TokenizerConfig) -> EngineResult<Self> {
         let unk_id = vocab
             .get_id(&config.special_tokens.unk_token)
-            .ok_or_else(|| EngineError::TokenizationError(format!(
-                "UNK token '{}' not found in vocabulary",
-                config.special_tokens.unk_token
-            )))?;
+            .ok_or_else(|| {
+                EngineError::TokenizationError(format!(
+                    "UNK token '{}' not found in vocabulary",
+                    config.special_tokens.unk_token
+                ))
+            })?;
 
         let pad_id = vocab
             .get_id(&config.special_tokens.pad_token)
-            .ok_or_else(|| EngineError::TokenizationError(format!(
-                "PAD token '{}' not found in vocabulary",
-                config.special_tokens.pad_token
-            )))?;
+            .ok_or_else(|| {
+                EngineError::TokenizationError(format!(
+                    "PAD token '{}' not found in vocabulary",
+                    config.special_tokens.pad_token
+                ))
+            })?;
 
         let cls_id = vocab
             .get_id(&config.special_tokens.cls_token)
-            .ok_or_else(|| EngineError::TokenizationError(format!(
-                "CLS token '{}' not found in vocabulary",
-                config.special_tokens.cls_token
-            )))?;
+            .ok_or_else(|| {
+                EngineError::TokenizationError(format!(
+                    "CLS token '{}' not found in vocabulary",
+                    config.special_tokens.cls_token
+                ))
+            })?;
 
         let sep_id = vocab
             .get_id(&config.special_tokens.sep_token)
-            .ok_or_else(|| EngineError::TokenizationError(format!(
-                "SEP token '{}' not found in vocabulary",
-                config.special_tokens.sep_token
-            )))?;
+            .ok_or_else(|| {
+                EngineError::TokenizationError(format!(
+                    "SEP token '{}' not found in vocabulary",
+                    config.special_tokens.sep_token
+                ))
+            })?;
 
         Ok(Self {
             vocab: Arc::new(vocab),
@@ -306,9 +314,10 @@ impl WordPieceTokenizer {
             all_token_ids.extend(vec![self.pad_id; pad_count]);
             attention_mask.extend(vec![0u8; pad_count]);
             if self.config.return_tokens {
-                all_tokens.extend(
-                    vec![self.config.special_tokens.pad_token.clone(); pad_count],
-                );
+                all_tokens.extend(vec![
+                    self.config.special_tokens.pad_token.clone();
+                    pad_count
+                ]);
             }
             special_tokens_mask.extend(vec![1u8; pad_count]);
         }
@@ -571,7 +580,11 @@ impl WordPieceTokenizer {
             || token == self.config.special_tokens.cls_token
             || token == self.config.special_tokens.sep_token
             || token == self.config.special_tokens.mask_token
-            || self.config.special_tokens.additional_special_tokens.contains(&token.to_string())
+            || self
+                .config
+                .special_tokens
+                .additional_special_tokens
+                .contains(&token.to_string())
     }
 
     fn compute_padded_length(&self, current: usize) -> usize {
@@ -605,14 +618,16 @@ impl WhitespaceTokenizer {
 
     pub fn encode(&self, text: &str) -> EngineResult<TokenizerOutput> {
         let tokens: Vec<String> = if self.config.do_lower_case {
-            text.split_whitespace()
-                .map(|t| t.to_lowercase())
-                .collect()
+            text.split_whitespace().map(|t| t.to_lowercase()).collect()
         } else {
             text.split_whitespace().map(|t| t.to_string()).collect()
         };
 
-        let mut ids: Vec<TokenId> = tokens.iter().enumerate().map(|(i, _)| i as TokenId).collect();
+        let mut ids: Vec<TokenId> = tokens
+            .iter()
+            .enumerate()
+            .map(|(i, _)| i as TokenId)
+            .collect();
         let was_truncated = ids.len() > self.config.max_length;
         ids.truncate(self.config.max_length);
         let num_tokens = ids.len();
@@ -680,9 +695,11 @@ mod tests {
         vocab.insert("[CLS]".to_string(), 2);
         vocab.insert("[SEP]".to_string(), 3);
         vocab.insert("[MASK]".to_string(), 4);
-        for (i, word) in ["hello", "world", "test", "token", "##ing", "##ed", "neural", "core"]
-            .iter()
-            .enumerate()
+        for (i, word) in [
+            "hello", "world", "test", "token", "##ing", "##ed", "neural", "core",
+        ]
+        .iter()
+        .enumerate()
         {
             vocab.insert(word.to_string(), (i + 5) as TokenId);
         }

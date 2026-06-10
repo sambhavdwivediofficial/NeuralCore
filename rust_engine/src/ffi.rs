@@ -6,17 +6,14 @@ use crate::compression::{
     quantize_scalar_i8, CompressionConfig,
 };
 use crate::reranker::{
-    compute_mrr, compute_ndcg, compute_precision_at_k,
-    NormalizationMethod, RerankerConfig, RerankerType, ScoreFusion,
+    compute_mrr, compute_ndcg, compute_precision_at_k, NormalizationMethod, RerankerConfig,
+    RerankerType, ScoreFusion,
 };
 use crate::similarity::{
-    batch_cosine_similarity, batch_dot_product, cosine_similarity,
-    cosine_similarity_prenormalized, dot_product, euclidean_distance, euclidean_similarity,
-    top_k_by_similarity,
+    batch_cosine_similarity, batch_dot_product, cosine_similarity, cosine_similarity_prenormalized,
+    dot_product, euclidean_distance, euclidean_similarity, top_k_by_similarity,
 };
-use crate::tokenizer::{
-    batch_count_tokens_approximate, count_tokens_approximate, fits_in_context,
-};
+use crate::tokenizer::{batch_count_tokens_approximate, count_tokens_approximate, fits_in_context};
 use crate::types::{DistanceMetric, RankedResult};
 use crate::utils::{min_max_normalize, normalize_vector_new, reciprocal_rank_fusion, softmax};
 use crate::vector_index::{IndexConfig, VectorIndex};
@@ -35,8 +32,7 @@ static VECTOR_INDEXES: Lazy<Mutex<HashMap<String, Arc<VectorIndex>>>> =
 static EMBEDDING_CACHE: Lazy<EmbeddingCache> = Lazy::new(|| EmbeddingCache::new(50_000, 86400));
 
 #[allow(dead_code)]
-static QUERY_CACHE: Lazy<QueryResultCache> =
-    Lazy::new(|| QueryResultCache::new(10_000, 300));
+static QUERY_CACHE: Lazy<QueryResultCache> = Lazy::new(|| QueryResultCache::new(10_000, 300));
 
 fn engine_err_to_py(e: crate::error::EngineError) -> PyErr {
     PyRuntimeError::new_err(e.to_string())
@@ -212,7 +208,9 @@ fn py_index_add_batch(
         })
         .transpose()?;
 
-    index.add_batch(ids, vectors, parsed_meta).map_err(engine_err_to_py)
+    index
+        .add_batch(ids, vectors, parsed_meta)
+        .map_err(engine_err_to_py)
 }
 
 #[pyfunction]
@@ -229,7 +227,9 @@ fn py_index_search(
         .get(index_id)
         .ok_or_else(|| PyValueError::new_err(format!("Index '{}' not found", index_id)))?;
 
-    let results = index.search(&query, k, ef, None).map_err(engine_err_to_py)?;
+    let results = index
+        .search(&query, k, ef, None)
+        .map_err(engine_err_to_py)?;
     Ok(results.into_iter().map(|r| (r.id, r.score)).collect())
 }
 
@@ -303,7 +303,8 @@ fn py_fuse_ranked_lists(
     let config = RerankerConfig {
         reranker_type,
         rrf_k,
-        weights: weights.unwrap_or_else(|| vec![1.0 / ranked_lists.len() as f32; ranked_lists.len()]),
+        weights: weights
+            .unwrap_or_else(|| vec![1.0 / ranked_lists.len() as f32; ranked_lists.len()]),
         normalize_before_fusion: normalize,
         normalization_method: NormalizationMethod::MinMax,
         top_n,
@@ -411,7 +412,12 @@ fn py_compress(data: Vec<u8>, algorithm: &str, zstd_level: Option<i32>) -> PyRes
         "zstd" => crate::compression::CompressionAlgorithm::Zstd,
         "snappy" => crate::compression::CompressionAlgorithm::Snappy,
         "none" => crate::compression::CompressionAlgorithm::None,
-        other => return Err(PyValueError::new_err(format!("Unknown algorithm: {}", other))),
+        other => {
+            return Err(PyValueError::new_err(format!(
+                "Unknown algorithm: {}",
+                other
+            )))
+        }
     };
     let config = CompressionConfig {
         algorithm: alg,
@@ -430,7 +436,12 @@ fn py_decompress(data: Vec<u8>, algorithm: &str) -> PyResult<Vec<u8>> {
         "zstd" => crate::compression::CompressionAlgorithm::Zstd,
         "snappy" => crate::compression::CompressionAlgorithm::Snappy,
         "none" => crate::compression::CompressionAlgorithm::None,
-        other => return Err(PyValueError::new_err(format!("Unknown algorithm: {}", other))),
+        other => {
+            return Err(PyValueError::new_err(format!(
+                "Unknown algorithm: {}",
+                other
+            )))
+        }
     };
     let config = CompressionConfig {
         algorithm: alg,
@@ -482,11 +493,7 @@ fn py_quantize_scalar_i8(
 }
 
 #[pyfunction]
-fn py_dequantize_scalar_i8(
-    quantized: Vec<Vec<i8>>,
-    min_val: f32,
-    max_val: f32,
-) -> Vec<Vec<f32>> {
+fn py_dequantize_scalar_i8(quantized: Vec<Vec<i8>>, min_val: f32, max_val: f32) -> Vec<Vec<f32>> {
     dequantize_scalar_i8(&quantized, min_val, max_val)
 }
 

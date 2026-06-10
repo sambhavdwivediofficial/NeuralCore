@@ -2,6 +2,7 @@
 
 #[cfg(feature = "cli")]
 mod cli {
+    use clap::{Parser, Subcommand};
     use neuralcore_engine::compression::{
         compress, decompress, CompressionAlgorithm, CompressionConfig,
     };
@@ -10,7 +11,6 @@ mod cli {
     use neuralcore_engine::tokenizer::count_tokens_approximate;
     use neuralcore_engine::types::DistanceMetric;
     use neuralcore_engine::vector_index::{IndexConfig, VectorIndex};
-    use clap::{Parser, Subcommand};
     use std::path::PathBuf;
     use std::time::Instant;
 
@@ -60,10 +60,18 @@ parallel execution via Rayon, and Python FFI via PyO3.
     #[derive(clap::Args, Debug)]
     #[command(about = "Run performance benchmarks")]
     pub struct BenchArgs {
-        #[arg(long, default_value = "all", help = "Benchmark to run: all, similarity, index, tokenizer, reranker, compression")]
+        #[arg(
+            long,
+            default_value = "all",
+            help = "Benchmark to run: all, similarity, index, tokenizer, reranker, compression"
+        )]
         pub target: String,
 
-        #[arg(long, default_value_t = 1000, help = "Number of vectors for index benchmarks")]
+        #[arg(
+            long,
+            default_value_t = 1000,
+            help = "Number of vectors for index benchmarks"
+        )]
         pub num_vectors: usize,
 
         #[arg(long, default_value_t = 1536, help = "Vector dimension")]
@@ -88,10 +96,17 @@ parallel execution via Rayon, and Python FFI via PyO3.
         #[arg(long, help = "Vector B as comma-separated floats: 0.4,0.5,0.6")]
         pub vec_b: String,
 
-        #[arg(long, default_value = "cosine", help = "Metric: cosine, dot_product, euclidean, manhattan")]
+        #[arg(
+            long,
+            default_value = "cosine",
+            help = "Metric: cosine, dot_product, euclidean, manhattan"
+        )]
         pub metric: String,
 
-        #[arg(long, help = "Vectors are pre-normalized (skips normalization for cosine)")]
+        #[arg(
+            long,
+            help = "Vectors are pre-normalized (skips normalization for cosine)"
+        )]
         pub prenormalized: bool,
     }
 
@@ -166,7 +181,11 @@ parallel execution via Rayon, and Python FFI via PyO3.
     #[derive(clap::Args, Debug)]
     #[command(about = "Rerank search results using score fusion")]
     pub struct RerankArgs {
-        #[arg(long, default_value = "rrf", help = "Strategy: rrf, weighted, borda, softmax, score_norm")]
+        #[arg(
+            long,
+            default_value = "rrf",
+            help = "Strategy: rrf, weighted, borda, softmax, score_norm"
+        )]
         pub strategy: String,
 
         #[arg(long, default_value_t = 60.0)]
@@ -211,8 +230,19 @@ parallel execution via Rayon, and Python FFI via PyO3.
         } else {
             println!("NeuralCore Rust Engine");
             println!("  Version      : {}", neuralcore_engine::VERSION);
-            println!("  Build        : {}", if cfg!(debug_assertions) { "debug" } else { "release" });
-            println!("  CPU Cores    : {} logical / {} physical", num_cpus::get(), num_cpus::get_physical());
+            println!(
+                "  Build        : {}",
+                if cfg!(debug_assertions) {
+                    "debug"
+                } else {
+                    "release"
+                }
+            );
+            println!(
+                "  CPU Cores    : {} logical / {} physical",
+                num_cpus::get(),
+                num_cpus::get_physical()
+            );
             println!("  SIMD         : {}", cfg!(feature = "simd"));
             println!("  Compression  : {}", cfg!(feature = "compression"));
             println!("  Python FFI   : {}", cfg!(feature = "python-bindings"));
@@ -244,7 +274,8 @@ parallel execution via Rayon, and Python FFI via PyO3.
         };
 
         let start = Instant::now();
-        let score = neuralcore_engine::similarity::compute_similarity(&a, &b, metric, args.prenormalized);
+        let score =
+            neuralcore_engine::similarity::compute_similarity(&a, &b, metric, args.prenormalized);
         let elapsed = start.elapsed();
 
         match score {
@@ -279,7 +310,10 @@ parallel execution via Rayon, and Python FFI via PyO3.
                 dimension,
                 top_k,
             } => {
-                println!("Running HNSW index smoketest: {} vectors, dim={}, k={}", num_vectors, dimension, top_k);
+                println!(
+                    "Running HNSW index smoketest: {} vectors, dim={}, k={}",
+                    num_vectors, dimension, top_k
+                );
 
                 let config = IndexConfig::hnsw(dimension, DistanceMetric::Cosine);
                 let index = VectorIndex::new(config);
@@ -320,8 +354,11 @@ parallel execution via Rayon, and Python FFI via PyO3.
                             );
                         } else {
                             println!("  Indexed   : {}", index.len());
-                            println!("  Add time  : {:?} ({:.2}k vec/s)", add_elapsed,
-                                num_vectors as f64 / add_elapsed.as_secs_f64() / 1000.0);
+                            println!(
+                                "  Add time  : {:?} ({:.2}k vec/s)",
+                                add_elapsed,
+                                num_vectors as f64 / add_elapsed.as_secs_f64() / 1000.0
+                            );
                             println!("  Search    : {:?}", search_elapsed);
                             println!("  Results   : {}", r.len());
                             if let Some(top) = r.first() {
@@ -366,7 +403,12 @@ parallel execution via Rayon, and Python FFI via PyO3.
 
     fn cmd_compress(args: CompressArgs, use_json: bool) {
         match args.operation {
-            CompressOperation::Compress { input, output, algorithm, zstd_level } => {
+            CompressOperation::Compress {
+                input,
+                output,
+                algorithm,
+                zstd_level,
+            } => {
                 let data = std::fs::read(&input).unwrap_or_else(|e| {
                     eprintln!("Error reading {}: {}", input.display(), e);
                     std::process::exit(1);
@@ -388,13 +430,17 @@ parallel execution via Rayon, and Python FFI via PyO3.
                             std::process::exit(1);
                         });
                         if use_json {
-                            println!("{}", serde_json::to_string_pretty(&serde_json::json!({
-                                "original_bytes": stats.original_size_bytes,
-                                "compressed_bytes": stats.compressed_size_bytes,
-                                "ratio": stats.compression_ratio,
-                                "algorithm": stats.algorithm,
-                                "elapsed_us": stats.duration_micros,
-                            })).unwrap());
+                            println!(
+                                "{}",
+                                serde_json::to_string_pretty(&serde_json::json!({
+                                    "original_bytes": stats.original_size_bytes,
+                                    "compressed_bytes": stats.compressed_size_bytes,
+                                    "ratio": stats.compression_ratio,
+                                    "algorithm": stats.algorithm,
+                                    "elapsed_us": stats.duration_micros,
+                                }))
+                                .unwrap()
+                            );
                         } else {
                             println!("Original     : {} bytes", stats.original_size_bytes);
                             println!("Compressed   : {} bytes", stats.compressed_size_bytes);
@@ -409,7 +455,11 @@ parallel execution via Rayon, and Python FFI via PyO3.
                     }
                 }
             }
-            CompressOperation::Decompress { input, output, algorithm } => {
+            CompressOperation::Decompress {
+                input,
+                output,
+                algorithm,
+            } => {
                 let data = std::fs::read(&input).unwrap_or_else(|e| {
                     eprintln!("Error reading {}: {}", input.display(), e);
                     std::process::exit(1);
@@ -424,7 +474,11 @@ parallel execution via Rayon, and Python FFI via PyO3.
                             eprintln!("Error writing {}: {}", output.display(), e);
                             std::process::exit(1);
                         });
-                        println!("Decompressed {} bytes -> {} bytes", data.len(), decompressed.len());
+                        println!(
+                            "Decompressed {} bytes -> {} bytes",
+                            data.len(),
+                            decompressed.len()
+                        );
                     }
                     Err(e) => {
                         eprintln!("Decompress error: {}", e);
@@ -432,8 +486,14 @@ parallel execution via Rayon, and Python FFI via PyO3.
                     }
                 }
             }
-            CompressOperation::Benchmark { size_bytes, iterations } => {
-                println!("Compression benchmark: {} bytes x {} iterations", size_bytes, iterations);
+            CompressOperation::Benchmark {
+                size_bytes,
+                iterations,
+            } => {
+                println!(
+                    "Compression benchmark: {} bytes x {} iterations",
+                    size_bytes, iterations
+                );
                 let data: Vec<u8> = (0..size_bytes).map(|i| (i % 256) as u8).collect();
                 let algorithms = [
                     CompressionAlgorithm::Lz4,
@@ -529,7 +589,10 @@ parallel execution via Rayon, and Python FFI via PyO3.
                         .collect();
                     println!("{}", serde_json::to_string_pretty(&json_results).unwrap());
                 } else {
-                    println!("Fusion results (strategy={}, rrf_k={}):", args.strategy, args.rrf_k);
+                    println!(
+                        "Fusion results (strategy={}, rrf_k={}):",
+                        args.strategy, args.rrf_k
+                    );
                     for r in &results {
                         println!("  #{} {:8} score={:.6}", r.rank, r.id, r.score);
                     }
@@ -549,10 +612,13 @@ parallel execution via Rayon, and Python FFI via PyO3.
         if run_all || args.target == "similarity" {
             let result = bench_similarity(args.dimension, args.iterations, &args.target);
             if !use_json {
-                println!("[similarity] dim={} iters={} | avg={:.2}μs | throughput={:.0}k ops/s",
-                    args.dimension, args.iterations,
+                println!(
+                    "[similarity] dim={} iters={} | avg={:.2}μs | throughput={:.0}k ops/s",
+                    args.dimension,
+                    args.iterations,
                     result["avg_us"].as_f64().unwrap_or(0.0),
-                    result["throughput_kops"].as_f64().unwrap_or(0.0));
+                    result["throughput_kops"].as_f64().unwrap_or(0.0)
+                );
             }
             all_results.push(result);
         }
@@ -560,16 +626,25 @@ parallel execution via Rayon, and Python FFI via PyO3.
         if run_all || args.target == "batch_similarity" {
             let result = bench_batch_similarity(args.dimension, args.num_vectors, args.iterations);
             if !use_json {
-                println!("[batch_sim] dim={} n={} iters={} | avg={:.2}ms | throughput={:.0}k vec/s",
-                    args.dimension, args.num_vectors, args.iterations,
+                println!(
+                    "[batch_sim] dim={} n={} iters={} | avg={:.2}ms | throughput={:.0}k vec/s",
+                    args.dimension,
+                    args.num_vectors,
+                    args.iterations,
                     result["avg_ms"].as_f64().unwrap_or(0.0),
-                    result["throughput_kvec_per_s"].as_f64().unwrap_or(0.0));
+                    result["throughput_kvec_per_s"].as_f64().unwrap_or(0.0)
+                );
             }
             all_results.push(result);
         }
 
         if run_all || args.target == "index" {
-            let result = bench_index(args.dimension, args.num_vectors, args.top_k, args.iterations);
+            let result = bench_index(
+                args.dimension,
+                args.num_vectors,
+                args.top_k,
+                args.iterations,
+            );
             if !use_json {
                 println!("[index] dim={} n={} k={} | add={:.2}ms | search={:.2}μs | add_throughput={:.1}k vec/s",
                     args.dimension, args.num_vectors, args.top_k,
@@ -583,10 +658,12 @@ parallel execution via Rayon, and Python FFI via PyO3.
         if run_all || args.target == "tokenizer" {
             let result = bench_tokenizer(args.iterations);
             if !use_json {
-                println!("[tokenizer] iters={} | avg={:.2}μs | throughput={:.0}k docs/s",
+                println!(
+                    "[tokenizer] iters={} | avg={:.2}μs | throughput={:.0}k docs/s",
                     args.iterations,
                     result["avg_us"].as_f64().unwrap_or(0.0),
-                    result["throughput_kdocs"].as_f64().unwrap_or(0.0));
+                    result["throughput_kdocs"].as_f64().unwrap_or(0.0)
+                );
             }
             all_results.push(result);
         }
@@ -594,10 +671,12 @@ parallel execution via Rayon, and Python FFI via PyO3.
         if run_all || args.target == "compression" {
             let result = bench_compression(args.iterations);
             if !use_json {
-                println!("[compression] iters={} | lz4_compress={:.0}μs | lz4_ratio={:.3}x",
+                println!(
+                    "[compression] iters={} | lz4_compress={:.0}μs | lz4_ratio={:.3}x",
                     args.iterations,
                     result["lz4_avg_compress_us"].as_f64().unwrap_or(0.0),
-                    result["lz4_ratio"].as_f64().unwrap_or(0.0));
+                    result["lz4_ratio"].as_f64().unwrap_or(0.0)
+                );
             }
             all_results.push(result);
         }

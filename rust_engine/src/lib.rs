@@ -237,10 +237,7 @@ pub mod utils {
         Ok(())
     }
 
-    pub fn validate_dimension_match(
-        a_dim: usize,
-        b_dim: usize,
-    ) -> EngineResult<()> {
+    pub fn validate_dimension_match(a_dim: usize, b_dim: usize) -> EngineResult<()> {
         if a_dim != b_dim {
             return Err(EngineError::DimensionMismatch {
                 expected: a_dim,
@@ -313,8 +310,7 @@ pub mod utils {
         ranked_lists: &[Vec<(String, usize)>],
         k: f32,
     ) -> Vec<(String, f32)> {
-        let mut scores: std::collections::HashMap<String, f32> =
-            std::collections::HashMap::new();
+        let mut scores: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
         for list in ranked_lists {
             for (id, rank) in list {
                 let rrf_score = 1.0 / (k + *rank as f32);

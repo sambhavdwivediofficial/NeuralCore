@@ -137,10 +137,7 @@ pub fn batch_cosine_similarity(
     Ok(scores)
 }
 
-pub fn batch_dot_product(
-    query: VectorSlice,
-    vectors: &[Vec<f32>],
-) -> EngineResult<Vec<Score>> {
+pub fn batch_dot_product(query: VectorSlice, vectors: &[Vec<f32>]) -> EngineResult<Vec<Score>> {
     if vectors.is_empty() {
         return Ok(Vec::new());
     }
@@ -169,7 +166,11 @@ pub fn batch_euclidean_similarity(
     let scores: Vec<Score> = vectors
         .par_iter()
         .map(|v| {
-            let dist_sq: f32 = query.iter().zip(v.iter()).map(|(a, b)| (a - b).powi(2)).sum();
+            let dist_sq: f32 = query
+                .iter()
+                .zip(v.iter())
+                .map(|(a, b)| (a - b).powi(2))
+                .sum();
             1.0 / (1.0 + dist_sq.sqrt())
         })
         .collect();
@@ -235,9 +236,7 @@ pub fn top_k_by_similarity(
         indexed.truncate(k);
     }
 
-    indexed.sort_unstable_by(|a, b| {
-        b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-    });
+    indexed.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     Ok(indexed
         .into_iter()
@@ -431,13 +430,11 @@ mod tests {
     #[test]
     fn test_top_k_by_similarity_ordering() {
         let query = vec![1.0f32, 0.0];
-        let vectors = vec![
-            vec![0.5f32, 0.0],
-            vec![1.0f32, 0.0],
-            vec![0.1f32, 0.0],
-        ];
+        let vectors = vec![vec![0.5f32, 0.0], vec![1.0f32, 0.0], vec![0.1f32, 0.0]];
         let ids = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-        let results = top_k_by_similarity(&query, &vectors, &ids, 2, DistanceMetric::DotProduct, false).unwrap();
+        let results =
+            top_k_by_similarity(&query, &vectors, &ids, 2, DistanceMetric::DotProduct, false)
+                .unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].0, "b");
         assert_eq!(results[1].0, "a");
