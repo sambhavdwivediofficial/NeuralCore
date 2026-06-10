@@ -1,0 +1,124 @@
+# infrastructure/monitoring/loki.yml
+
+auth_enabled: false
+
+ingester:
+  chunk_idle_period: 3m
+  chunk_retain_period: 1m
+  chunk_encoding: snappy
+  max_chunk_age: 2h
+  max_streams_matcher_size: 10000
+  autoforget_period: 10m
+  wal:
+    enabled: true
+    dir: /loki/wal
+    checkpoint_duration: 5m
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    num_tokens: 128
+    heartbeat_timeout: 5m
+
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  ingestion_rate_mb: 100
+  ingestion_burst_size_mb: 200
+  max_streams_per_user: 10000
+  max_global_streams_per_user: 20000
+  max_cache_freshness_per_query: 10m
+  split_queries_by_interval: 24h
+  retention_period: 720h
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+  log_format: json
+
+distributor:
+  rate_limit_enabled: true
+  rate_limit: 50MB
+  rate_limit_burst: 100MB
+  ring:
+    kvstore:
+      store: inmemory
+
+querier:
+  max_concurrent: 40
+  query_timeout: 5m
+  query_ingesters_within: 3h
+  engine:
+    timeout: 3m
+    max_look_back_period: 30d
+  cache_results: true
+
+query_range:
+  results_cache:
+    cache:
+      enable_fifocache: true
+      default_validity: 1m
+      background:
+        writeback_goroutines: 10
+        writeback_channel_size: 10000
+  compress_responses: true
+  max_cache_freshness_per_query: 10m
+  split_queries_by_interval: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
+    shared_store: filesystem
+    index_gateway_client:
+      server_address: loki-index-gateway:9096
+  filesystem:
+    directory: /loki/chunks
+
+chunk_store_config:
+  max_look_back_period: 0s
+  chunk_cache_config:
+    enable_fifocache: true
+    default_validity: 1h
+    background:
+      writeback_goroutines: 10
+      writeback_channel_size: 10000
+  write_dedupe_cache_config:
+    enable_fifocache: true
+    default_validity: 1m
+    background:
+      writeback_goroutines: 5
+      writeback_channel_size: 1000
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 720h
+  poll_interval: 10m
+  creation_grace_period: 10m
+  check_delay: 5m
+
+runtime_config:
+  period: 10s
+  file: /etc/loki/runtime.yaml
+
+analytics:
+  reporting_enabled: false
+
+tracing:
+  enabled: true
+  sampler:
+    type: probabilistic
+    param: 0.1
