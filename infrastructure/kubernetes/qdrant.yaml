@@ -1,0 +1,285 @@
+# infrastructure/kubernetes/qdrant.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qdrant-config
+  namespace: neuralcore
+data:
+  qdrant.yaml: |
+    server:
+      http_port: 6333
+      grpc_port: 6334
+      max_request_size_mb: 200
+    storage:
+      storage_path: /qdrant/storage
+      snapshots_path: /qdrant/snapshots
+      wal:
+        wal_capacity_mb: 200
+        wal_segments_ahead: 0
+    cluster:
+      enabled: false
+      consensus:
+        tick_period_ms: 100
+      snapshot_recovery:
+        max_retries: 5
+    telemetry_disabled: false
+    read_only_mode: false
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-data
+  namespace: neuralcore
+  labels:
+    app: qdrant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted-fast
+  resources:
+    requests:
+      storage: 200Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: neuralcore
+  labels:
+    app: qdrant
+    component: vector-store
+    version: "v1"
+spec:
+  serviceName: qdrant
+  replicas: 1
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: qdrant
+      component: vector-store
+  template:
+    metadata:
+      labels:
+        app: qdrant
+        component: vector-store
+        version: "v1"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "6333"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: neuralcore-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values: ["i3.2xlarge", "i3en.3xlarge", "m5.4xlarge", "m6i.4xlarge"]
+      priorityClassName: neuralcore-critical
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.7.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 6333
+              protocol: TCP
+            - name: grpc
+              containerPort: 6334
+              protocol: TCP
+          env:
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: neuralcore-secrets
+                  key: QDRANT_API_KEY
+            - name: QDRANT_READ_ONLY_MODE
+              value: "false"
+          resources:
+            requests:
+              cpu: "4"
+              memory: "8Gi"
+              ephemeral-storage: "5Gi"
+            limits:
+              cpu: "8"
+              memory: "16Gi"
+              ephemeral-storage: "10Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            timeoutSeconds: 3
+            failureThreshold: 30
+          volumeMounts:
+            - name: config
+              mountPath: /qdrant/config
+            - name: data
+              mountPath: /qdrant/storage
+            - name: snapshots
+              mountPath: /qdrant/snapshots
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep 15
+
+      volumes:
+        - name: config
+          configMap:
+            name: qdrant-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: qdrant-data
+        - name: snapshots
+          emptyDir:
+            sizeLimit: 100Gi
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: neuralcore
+  labels:
+    app: qdrant
+    component: vector-store
+spec:
+  type: ClusterIP
+  selector:
+    app: qdrant
+    component: vector-store
+  ports:
+    - name: http
+      port: 6333
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 6334
+      targetPort: grpc
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant-headless
+  namespace: neuralcore
+  labels:
+    app: qdrant
+    component: vector-store
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: qdrant
+    component: vector-store
+  ports:
+    - name: http
+      port: 6333
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 6334
+      targetPort: grpc
+      protocol: TCP
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: qdrant-pdb
+  namespace: neuralcore
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: qdrant
+      component: vector-store
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qdrant-snapshot
+  namespace: neuralcore
+  labels:
+    app: qdrant
+    component: backup
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neuralcore-sa
+          containers:
+            - name: snapshot
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  curl -X POST http://qdrant.neuralcore.svc.cluster.local:6333/snapshots \
+                    -H "Authorization: Bearer $QDRANT_API_KEY" || echo "Snapshot failed"
+              env:
+                - name: QDRANT_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: neuralcore-secrets
+                      key: QDRANT_API_KEY
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "200m"
+                  memory: "256Mi"
+          restartPolicy: OnFailure

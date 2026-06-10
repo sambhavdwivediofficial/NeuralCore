@@ -1,0 +1,243 @@
+# infrastructure/kubernetes/namespace.yaml
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neuralcore
+  labels:
+    name: neuralcore
+    environment: production
+    managed-by: terraform
+  annotations:
+    description: "NeuralCore AI Infrastructure Platform"
+    owner: "DevOps Team"
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: neuralcore-quota
+  namespace: neuralcore
+spec:
+  hard:
+    requests.cpu: "100"
+    requests.memory: "200Gi"
+    limits.cpu: "200"
+    limits.memory: "400Gi"
+    pods: "500"
+    services: "50"
+    persistentvolumeclaims: "20"
+  scopeSelector:
+    matchExpressions:
+      - operator: In
+        scopeName: PriorityClass
+        values: ["high", "medium", "low"]
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: neuralcore-limits
+  namespace: neuralcore
+spec:
+  limits:
+    - type: Pod
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      max:
+        cpu: "4"
+        memory: "16Gi"
+      default:
+        cpu: "1"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "500m"
+        memory: "256Mi"
+    - type: Container
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      max:
+        cpu: "4"
+        memory: "16Gi"
+      default:
+        cpu: "1"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "500m"
+        memory: "256Mi"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neuralcore-sa
+  namespace: neuralcore
+  labels:
+    app: neuralcore
+    environment: production
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neuralcore-admin
+  labels:
+    app: neuralcore
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/logs", "pods/exec"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neuralcore-admin-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: neuralcore-admin
+subjects:
+  - kind: ServiceAccount
+    name: neuralcore-sa
+    namespace: neuralcore
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neuralcore-read
+  namespace: neuralcore
+  labels:
+    app: neuralcore
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/logs", "services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neuralcore-read-binding
+  namespace: neuralcore
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: neuralcore-read
+subjects:
+  - kind: ServiceAccount
+    name: neuralcore-sa
+    namespace: neuralcore
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: neuralcore-pdb
+  namespace: neuralcore
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: neuralcore
+      critical: "true"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neuralcore-config
+  namespace: neuralcore
+  labels:
+    app: neuralcore
+    version: "1.0.0"
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "info"
+  NEURALCORE_ENV: "production"
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
+  TRACE_SAMPLE_RATE: "0.1"
+  CACHE_TTL: "3600"
+  API_TIMEOUT: "30"
+  WORKERS: "4"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: neuralcore-secrets
+  namespace: neuralcore
+  labels:
+    app: neuralcore
+    type: credentials
+type: Opaque
+stringData:
+  # These will be replaced by CI/CD pipeline
+  JWT_SECRET_KEY: "SET_VIA_CI_CD_PIPELINE"
+  DATABASE_PASSWORD: "SET_VIA_CI_CD_PIPELINE"
+  REDIS_PASSWORD: "SET_VIA_CI_CD_PIPELINE"
+  QDRANT_API_KEY: "SET_VIA_CI_CD_PIPELINE"
+  OPENAI_API_KEY: "SET_VIA_CI_CD_PIPELINE"
+  ANTHROPIC_API_KEY: "SET_VIA_CI_CD_PIPELINE"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: neuralcore-critical
+value: 1000
+globalDefault: false
+description: "Critical components for NeuralCore platform"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: neuralcore-high
+value: 500
+globalDefault: false
+description: "High priority workloads for NeuralCore"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: neuralcore-medium
+value: 100
+globalDefault: false
+description: "Medium priority workloads for NeuralCore"
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: neuralcore-low
+value: 0
+globalDefault: false
+description: "Low priority batch jobs for NeuralCore"

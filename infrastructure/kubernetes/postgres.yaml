@@ -1,0 +1,315 @@
+# infrastructure/kubernetes/postgres.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: neuralcore
+data:
+  POSTGRES_DB: "neuralcore"
+  POSTGRES_USER: "neuralcore"
+  shared_buffers: "256MB"
+  effective_cache_size: "1GB"
+  maintenance_work_mem: "64MB"
+  checkpoint_completion_target: "0.9"
+  wal_buffers: "16MB"
+  default_statistics_target: "100"
+  random_page_cost: "1.1"
+  effective_io_concurrency: "200"
+  work_mem: "4MB"
+  min_wal_size: "2GB"
+  max_wal_size: "8GB"
+  max_worker_processes: "4"
+  max_parallel_workers_per_gather: "2"
+  max_parallel_workers: "4"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: neuralcore
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "SET_VIA_CI_CD_PIPELINE"
+  REPLICATION_PASSWORD: "SET_VIA_CI_CD_PIPELINE"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: neuralcore
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-wal
+  namespace: neuralcore
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted-fast
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: neuralcore
+  labels:
+    app: postgres
+    component: database
+    version: "15"
+spec:
+  serviceName: postgres
+  replicas: 1
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+        version: "15"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: neuralcore-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values: ["m5.2xlarge", "m6i.2xlarge", "r5.2xlarge"]
+      priorityClassName: neuralcore-critical
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+            - secretRef:
+                name: postgres-secret
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_INITDB_ARGS
+              value: "-c shared_preload_libraries=pg_stat_statements,pg_trgm"
+          resources:
+            requests:
+              cpu: "2"
+              memory: "2Gi"
+              ephemeral-storage: "2Gi"
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+              ephemeral-storage: "4Gi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U neuralcore -d neuralcore
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U neuralcore -d neuralcore
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: wal
+              mountPath: /var/lib/postgresql/wal
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - pg_basebackup -D /tmp/backup || true
+
+        - name: postgres-exporter
+          image: prometheuscommunity/postgres-exporter:v0.14.0
+          ports:
+            - name: metrics
+              containerPort: 9187
+              protocol: TCP
+          env:
+            - name: DATA_SOURCE_NAME
+              value: "postgresql://neuralcore:$(POSTGRES_PASSWORD)@localhost:5432/neuralcore?sslmode=disable"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-data
+        - name: wal
+          persistentVolumeClaim:
+            claimName: postgres-wal
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: neuralcore
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: postgres
+    component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+    - name: metrics
+      port: 9187
+      targetPort: metrics
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-readwrite
+  namespace: neuralcore
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+    component: database
+    statefulset.kubernetes.io/pod-name: postgres-0
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: neuralcore
+  labels:
+    app: postgres
+    component: backup
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neuralcore-sa
+          containers:
+            - name: backup
+              image: postgres:15-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  pg_dump -U neuralcore -h postgres.neuralcore.svc.cluster.local -d neuralcore \
+                    --no-password --verbose --format=custom > /backup/neuralcore_$(date +%Y%m%d_%H%M%S).dump
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: POSTGRES_PASSWORD
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+          volumes:
+            - name: backup
+              emptyDir:
+                sizeLimit: 50Gi
+          restartPolicy: OnFailure

@@ -1,0 +1,313 @@
+# infrastructure/kubernetes/workers.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workers-config
+  namespace: neuralcore
+data:
+  CELERY_BROKER_URL: "redis://:$(REDIS_PASSWORD)@redis.neuralcore.svc.cluster.local:6379/0"
+  CELERY_RESULT_BACKEND: "redis://:$(REDIS_PASSWORD)@redis.neuralcore.svc.cluster.local:6379/1"
+  WORKER_PREFETCH_MULTIPLIER: "4"
+  WORKER_MAX_TASKS_PER_CHILD: "1000"
+  WORKER_TIME_LIMIT: "3600"
+  WORKER_SOFT_TIME_LIMIT: "3300"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workers
+  namespace: neuralcore
+  labels:
+    app: workers
+    component: async
+    version: "1.0.0"
+  annotations:
+    description: "Celery async task workers for NeuralCore"
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: workers
+      component: async
+  template:
+    metadata:
+      labels:
+        app: workers
+        component: async
+        version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: neuralcore-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: ["workers"]
+                topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values: ["c5.2xlarge", "c6i.2xlarge", "m5.xlarge"]
+      priorityClassName: neuralcore-medium
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: worker
+          image: neuralcore/worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workers-config
+                  key: CELERY_BROKER_URL
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: workers-config
+                  key: CELERY_RESULT_BACKEND
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: neuralcore-secrets
+                  key: REDIS_PASSWORD
+            - name: DATABASE_HOST
+              value: "postgres.neuralcore.svc.cluster.local"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: "neuralcore"
+            - name: DATABASE_USER
+              value: "neuralcore"
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: neuralcore-secrets
+                  key: DATABASE_PASSWORD
+            - name: LOG_LEVEL
+              value: "info"
+            - name: NEURALCORE_ENV
+              value: "production"
+            - name: WORKER_PREFETCH_MULTIPLIER
+              value: "4"
+            - name: WORKER_MAX_TASKS_PER_CHILD
+              value: "1000"
+            - name: WORKER_TIME_LIMIT
+              value: "3600"
+            - name: WORKER_SOFT_TIME_LIMIT
+              value: "3300"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              cpu: "1"
+              memory: "1Gi"
+              ephemeral-storage: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+              ephemeral-storage: "4Gi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A workers.tasks inspect active || exit 0
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A workers.tasks inspect active_queues > /dev/null
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 2
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep 30 && celery -A workers.tasks control shutdown || true
+
+      volumes:
+        - name: logs
+          emptyDir:
+            medium: Memory
+            sizeLimit: 500Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+
+      imagePullSecrets:
+        - name: docker-registry-credentials
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: workers-hpa
+  namespace: neuralcore
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: workers
+  minReplicas: 5
+  maxReplicas: 50
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: celery_queue_length
+        target:
+          type: AverageValue
+          averageValue: "100"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 10
+          periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: workers-pdb
+  namespace: neuralcore
+spec:
+  maxUnavailable: 2
+  selector:
+    matchLabels:
+      app: workers
+      component: async
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: workers-monitor
+  namespace: neuralcore
+  labels:
+    app: workers
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: workers
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: worker-healthcheck
+  namespace: neuralcore
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: neuralcore-sa
+      containers:
+        - name: healthcheck
+          image: neuralcore/worker:1.0.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              celery -A workers.tasks inspect active && \
+              celery -A workers.tasks inspect stats || exit 1
+          env:
+            - name: CELERY_BROKER_URL
+              value: "redis://:$(REDIS_PASSWORD)@redis.neuralcore.svc.cluster.local:6379/0"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: neuralcore-secrets
+                  key: REDIS_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      restartPolicy: Never

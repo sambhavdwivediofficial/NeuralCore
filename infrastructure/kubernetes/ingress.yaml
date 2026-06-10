@@ -1,0 +1,303 @@
+# infrastructure/kubernetes/ingress.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: ingress-nginx
+data:
+  enable-cors: "true"
+  enable-rate-limit: "true"
+  limit-connections: "100"
+  limit-rps: "1000"
+  ssl-protocols: "TLSv1.2 TLSv1.3"
+  ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
+  ssl-prefer-server-ciphers: "on"
+  ssl-session-cache: "shared:SSL:50m"
+  ssl-session-timeout: "1d"
+  http2-max-field-size: "16k"
+  client-max-body-size: "100m"
+  proxy-connect-timeout: "30"
+  proxy-send-timeout: "30"
+  proxy-read-timeout: "30"
+  proxy-buffering: "on"
+  proxy-buffer-size: "4k"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: neuralcore-tls
+  namespace: neuralcore
+type: kubernetes.io/tls
+data:
+  # Base64 encoded certificate and key (replace with actual cert)
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCi4uLgotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCi4uLgotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app: cert-manager
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: devops@sambhavdwivedi.in
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neuralcore-cert
+  namespace: neuralcore
+spec:
+  secretName: neuralcore-tls-auto
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: neuralcore.io
+  dnsNames:
+    - neuralcore.io
+    - "*.neuralcore.io"
+    - api.neuralcore.io
+    - dashboard.neuralcore.io
+    - docs.neuralcore.io
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: neuralcore-network-policy
+  namespace: neuralcore
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: nginx-ingress
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 9090
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              app: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+
+---
+apiVersion: networking.ingress.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neuralcore
+  namespace: neuralcore
+  labels:
+    app: neuralcore
+    component: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/limit-rps: "1000"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';";
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - neuralcore.io
+        - "*.neuralcore.io"
+        - api.neuralcore.io
+        - dashboard.neuralcore.io
+        - docs.neuralcore.io
+      secretName: neuralcore-tls-auto
+  rules:
+    - host: api.neuralcore.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000
+
+    - host: dashboard.neuralcore.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+
+    - host: docs.neuralcore.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docs
+                port:
+                  number: 8080
+
+    - host: neuralcore.io
+      http:
+        paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000
+          - path: /dashboard/
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress
+  namespace: neuralcore
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: neuralcore
+  labels:
+    app: frontend
+    component: ui
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+    component: ui
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docs
+  namespace: neuralcore
+  labels:
+    app: docs
+    component: documentation
+spec:
+  type: ClusterIP
+  selector:
+    app: docs
+    component: documentation
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

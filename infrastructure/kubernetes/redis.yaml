@@ -1,0 +1,303 @@
+# infrastructure/kubernetes/redis.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: neuralcore
+data:
+  redis.conf: |
+    # Memory
+    maxmemory 4gb
+    maxmemory-policy allkeys-lru
+    
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    
+    # Replication
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    
+    # Security
+    requirepass SET_VIA_CI_CD_PIPELINE
+    rename-command FLUSHDB ""
+    rename-command FLUSHALL ""
+    
+    # Performance
+    tcp-backlog 511
+    timeout 0
+    tcp-keepalive 300
+    databases 16
+    
+    # Monitoring
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+  namespace: neuralcore
+type: Opaque
+stringData:
+  redis-password: "SET_VIA_CI_CD_PIPELINE"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: neuralcore
+  labels:
+    app: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted-fast
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: neuralcore
+  labels:
+    app: redis
+    component: cache
+    version: "7"
+spec:
+  serviceName: redis
+  replicas: 1
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: redis
+      component: cache
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: cache
+        version: "7"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9121"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: neuralcore-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values: ["m5.xlarge", "m6i.xlarge", "c5.xlarge", "c6i.xlarge"]
+      priorityClassName: neuralcore-high
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          command:
+            - redis-server
+            - /usr/local/etc/redis/redis.conf
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+              ephemeral-storage: "500Mi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              ephemeral-storage: "2Gi"
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -a
+                - $(REDIS_PASSWORD)
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -a
+                - $(REDIS_PASSWORD)
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: redis-password
+          volumeMounts:
+            - name: config
+              mountPath: /usr/local/etc/redis
+            - name: data
+              mountPath: /data
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - redis-cli -a $REDIS_PASSWORD shutdown save
+
+        - name: redis-exporter
+          image: oliver006/redis_exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9121
+              protocol: TCP
+          env:
+            - name: REDIS_ADDR
+              value: "localhost:6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: redis-password
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+      volumes:
+        - name: config
+          configMap:
+            name: redis-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-data
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: neuralcore
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+    component: cache
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+    - name: metrics
+      port: 9121
+      targetPort: metrics
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: neuralcore
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: redis
+      component: cache
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: redis-monitor
+  namespace: neuralcore
+  labels:
+    app: redis
+    component: monitoring
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neuralcore-sa
+          containers:
+            - name: monitor
+              image: redis:7-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  redis-cli -h redis.neuralcore.svc.cluster.local -a $REDIS_PASSWORD \
+                    --latency-history 1 --latency-samples 3 || echo "Redis health check passed"
+              env:
+                - name: REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: redis-secret
+                      key: redis-password
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "200m"
+                  memory: "256Mi"
+          restartPolicy: OnFailure
