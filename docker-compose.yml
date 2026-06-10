@@ -1,171 +1,226 @@
-# docker-compose.yml
-version: '3.8'
+version: '3.9'
 
 services:
   postgres:
-    image: postgres:15.3
-    container_name: neuralcore-postgres
+    image: postgres:15-alpine
+    container_name: neuralcore-postgres-dev
     environment:
       POSTGRES_DB: neuralcore
       POSTGRES_USER: neuralcore
-      POSTGRES_PASSWORD: neuralcore123
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_PASSWORD: dev-password-change-in-prod
+      POSTGRES_INITDB_ARGS: -c shared_preload_libraries=pg_stat_statements,pg_trgm
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - neuralcore-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U neuralcore"]
+      test: ["CMD-SHELL", "pg_isready -U neuralcore -d neuralcore"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - neuralcore-network
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
-    image: redis:7.0-alpine
-    container_name: neuralcore-redis
-    command: redis-server --requirepass redis123
-    volumes:
-      - redis_data:/data
+    image: redis:7-alpine
+    container_name: neuralcore-redis-dev
+    command: redis-server --requirepass dev-redis-password-change-in-prod --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - neuralcore-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "dev-redis-password-change-in-prod", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - neuralcore-network
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   qdrant:
-    image: qdrant/qdrant:latest
-    container_name: neuralcore-qdrant
-    volumes:
-      - qdrant_data:/qdrant/storage
+    image: qdrant/qdrant:v1.7.0
+    container_name: neuralcore-qdrant-dev
+    environment:
+      QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
+      QDRANT_READ_ONLY_MODE: "false"
     ports:
       - "6333:6333"
-    environment:
-      QDRANT__SERVICE__API_KEY: qdrant123
-    networks:
-      - neuralcore-network
-
-  minio:
-    image: minio/minio:latest
-    container_name: neuralcore-minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      - "6334:6334"
     volumes:
-      - minio_data:/data
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web Console
+      - qdrant_data:/qdrant/storage
     networks:
       - neuralcore-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # ============================================
-  # APPLICATION LAYER
-  # ============================================
   api:
     build:
       context: .
       dockerfile: infrastructure/docker/api.Dockerfile
-    container_name: neuralcore-api
+    container_name: neuralcore-api-dev
     environment:
-      NODE_ENV: development
-      PORT: 3000
-      DATABASE_URL: postgresql://neuralcore:neuralcore123@postgres:5432/neuralcore
-      REDIS_URL: redis://:redis123@redis:6379
-      QDRANT_URL: http://qdrant:6333
-      QDRANT_API_KEY: qdrant123
-      S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: minioadmin
-      S3_SECRET_KEY: minioadmin123
-      JWT_SECRET: your-super-secret-jwt-key
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      LOG_LEVEL: debug
+      NEURALCORE_ENV: development
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: neuralcore
+      DATABASE_USER: neuralcore
+      DATABASE_PASSWORD: dev-password-change-in-prod
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: dev-redis-password-change-in-prod
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
+      JWT_SECRET_KEY: dev-jwt-secret-key-change-in-prod-minimum-32-chars
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      WORKERS: "4"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
-      - "3000:3000"
+      - "8000:8000"
+      - "9090:9090"
+    volumes:
+      - ./backend:/app
+      - ./configs:/app/configs
+    networks:
+      - neuralcore-network
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./:/app
-      - /app/node_modules
-    networks:
-      - neuralcore-network
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: /app/start.sh
 
-  worker:
+  workers:
     build:
       context: .
       dockerfile: infrastructure/docker/worker.Dockerfile
-    container_name: neuralcore-worker
+    container_name: neuralcore-workers-dev
     environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://neuralcore:neuralcore123@postgres:5432/neuralcore
-      REDIS_URL: redis://:redis123@redis:6379
-      QDRANT_URL: http://qdrant:6333
-      QDRANT_API_KEY: qdrant123
-    depends_on:
-      - postgres
-      - redis
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      LOG_LEVEL: debug
+      NEURALCORE_ENV: development
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: neuralcore
+      DATABASE_USER: neuralcore
+      DATABASE_PASSWORD: dev-password-change-in-prod
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: dev-redis-password-change-in-prod
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
+      CELERY_BROKER_URL: redis://:dev-redis-password-change-in-prod@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:dev-redis-password-change-in-prod@redis:6379/1
+      WORKER_PREFETCH_MULTIPLIER: "4"
+      WORKER_MAX_TASKS_PER_CHILD: "1000"
+      WORKER_TIME_LIMIT: "3600"
+      WORKER_SOFT_TIME_LIMIT: "3300"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
-      - ./:/app
-      - /app/node_modules
+      - ./backend:/app
+      - ./configs:/app/configs
     networks:
       - neuralcore-network
-
-  engine:
-    build:
-      context: .
-      dockerfile: infrastructure/docker/rust_engine.Dockerfile
-    container_name: neuralcore-engine
-    environment:
-      RUST_LOG: info
-      REDIS_URL: redis://:redis123@redis:6379
     depends_on:
-      - redis
-    networks:
-      - neuralcore-network
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: /app/start.sh
 
   frontend:
     build:
       context: .
       dockerfile: infrastructure/docker/frontend.Dockerfile
-    container_name: neuralcore-frontend
+    container_name: neuralcore-frontend-dev
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     ports:
-      - "3001:3000"  # Frontend 3001 pe, API 3000 pe
-    depends_on:
-      - api
-    networks:
-      - neuralcore-network
-
-  # ============================================
-  # REVERSE PROXY / LOAD BALANCER
-  # ============================================
-  nginx:
-    image: nginx:alpine
-    container_name: neuralcore-nginx
+      - "3000:3000"
     volumes:
-      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - api
-      - frontend
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     networks:
       - neuralcore-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # ============================================
-  # MONITORING (Optional)
-  # ============================================
   prometheus:
     image: prom/prometheus:latest
-    container_name: neuralcore-prometheus
+    container_name: neuralcore-prometheus-dev
     volumes:
       - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -173,26 +228,132 @@ services:
       - "9090:9090"
     networks:
       - neuralcore-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   grafana:
     image: grafana/grafana:latest
-    container_name: neuralcore-grafana
+    container_name: neuralcore-grafana-dev
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
+      - ./infrastructure/monitoring/grafana.json:/etc/grafana/provisioning/dashboards/neuralcore.json
       - grafana_data:/var/lib/grafana
     ports:
-      - "3002:3000"  # Grafana 3002 pe
+      - "3001:3000"
     networks:
       - neuralcore-network
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: neuralcore-loki-dev
+    volumes:
+      - ./infrastructure/monitoring/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - neuralcore-network
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: neuralcore-postgres-exporter-dev
+    environment:
+      DATA_SOURCE_NAME: postgresql://neuralcore:dev-password-change-in-prod@postgres:5432/neuralcore?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - neuralcore-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: neuralcore-redis-exporter-dev
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: dev-redis-password-change-in-prod
+    ports:
+      - "9121:9121"
+    networks:
+      - neuralcore-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   qdrant_data:
-  minio_data:
+    driver: local
   prometheus_data:
+    driver: local
   grafana_data:
+    driver: local
+  loki_data:
+    driver: local
 
 networks:
   neuralcore-network:
