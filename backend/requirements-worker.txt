@@ -1,2 +1,13 @@
-fastapi
-uvicorn
+# requirements-worker.txt
+-r requirements.txt
+flower==2.0.1
+torch==2.5.1
+transformers==4.47.1
+accelerate==1.2.1
+peft==0.14.0
+bitsandbytes==0.45.0
+deepspeed==0.16.1
+sentence-transformers==3.3.1
+datasets==3.2.0
+trl==0.13.0
+einops==0.8.0
