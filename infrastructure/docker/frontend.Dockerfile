@@ -9,7 +9,8 @@ WORKDIR /app
 
 COPY frontend/package.json frontend/package-lock.json ./
 
-RUN npm ci --legacy-peer-deps
+# RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 FROM node:20-alpine as builder
 

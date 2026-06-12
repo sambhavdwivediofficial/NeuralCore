@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: neuralcore
       POSTGRES_USER: neuralcore
       POSTGRES_PASSWORD: dev-password-change-in-prod
-      POSTGRES_INITDB_ARGS: -c shared_preload_libraries=pg_stat_statements,pg_trgm
+      # POSTGRES_INITDB_ARGS: -c shared_preload_libraries=pg_stat_statements,pg_trgm
     ports:
       - "5432:5432"
     volumes:
@@ -65,12 +65,12 @@ services:
       - qdrant_data:/qdrant/storage
     networks:
       - neuralcore-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:6333"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 10s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -119,7 +119,7 @@ services:
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -132,7 +132,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: /app/start.sh
+    entrypoint: []
+    # command: /app/start.sh
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   workers:
     build:
@@ -174,7 +176,7 @@ services:
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
       api:
         condition: service_healthy
     restart: unless-stopped
@@ -183,40 +185,42 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: /app/start.sh
+    entrypoint: []
+    # command: /app/start.sh
+    command: celery -A workers.tasks worker --loglevel=info
 
-  frontend:
-    build:
-      context: .
-      dockerfile: infrastructure/docker/frontend.Dockerfile
-    container_name: neuralcore-frontend-dev
-    environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - neuralcore-network
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: infrastructure/docker/frontend.Dockerfile
+  #   container_name: neuralcore-frontend-dev
+  #   environment:
+  #     NODE_ENV: development
+  #     NEXT_PUBLIC_API_URL: http://localhost:8000
+  #     NEXT_PUBLIC_APP_URL: http://localhost:3000
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   networks:
+  #     - neuralcore-network
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
   prometheus:
     image: prom/prometheus:latest

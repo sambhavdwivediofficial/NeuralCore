@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt requirements-worker.txt ./
+COPY backend/requirements.txt backend/requirements-worker.txt ./
 
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
@@ -41,8 +41,8 @@ WORKDIR /app
 
 COPY --from=builder --chown=neuralcore:neuralcore /opt/venv /opt/venv
 
-COPY --chown=neuralcore:neuralcore backend/workers ./workers
-COPY --chown=neuralcore:neuralcore backend/config.py ./
+COPY --chown=neuralcore:neuralcore backend/queue/ ./worker
+COPY --chown=neuralcore:neuralcore backend/settings.py ./
 
 RUN mkdir -p /app/logs && chown -R neuralcore:neuralcore /app/logs
 

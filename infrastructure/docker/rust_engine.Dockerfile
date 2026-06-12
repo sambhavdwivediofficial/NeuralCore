@@ -1,6 +1,6 @@
 # infrastructure/docker/rust_engine.Dockerfile
 
-FROM rust:1.75-slim as builder
+FROM rust:latest AS builder
 
 LABEL maintainer="Sambhav Dwivedi <sambhavdwivedi@outlook.com>"
 LABEL description="NeuralCore Rust Engine Builder"
@@ -29,8 +29,8 @@ RUN cargo build --release \
     -j $(nproc) \
     && strip target/release/neuralcore_engine_cli
 
-RUN pip install maturin && \
-    maturin build --release --strip -j $(nproc)
+# RUN pip install maturin && \
+#     maturin build --release --strip -j $(nproc)
 
 FROM debian:bookworm-slim
 
@@ -49,7 +49,7 @@ WORKDIR /app
 
 COPY --from=builder --chown=neuralcore:neuralcore /build/target/release/neuralcore_engine_cli /app/engine
 
-COPY --from=builder --chown=neuralcore:neuralcore /build/target/criterion /app/benchmarks
+# COPY --from=builder --chown=neuralcore:neuralcore /build/target/criterion /app/benchmarks
 
 RUN echo '#!/bin/bash\n/app/engine info > /dev/null 2>&1 && exit 0 || exit 1' > /app/healthcheck.sh && \
     chmod +x /app/healthcheck.sh
