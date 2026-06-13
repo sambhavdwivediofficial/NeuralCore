@@ -406,7 +406,7 @@ class AgentSettings(BaseModel):
 
 class EmbeddingProviderConfig(BaseModel):
     enabled: bool = True
-    models: list[str] = Field(default_factory=list)
+    models: dict[str, Any] = Field(default_factory=dict)
     default_model: str = ""
     api_key: Optional[SecretStr] = None
     base_url: Optional[str] = None
@@ -435,44 +435,69 @@ class EmbeddingSettings(BaseModel):
     providers: dict[str, EmbeddingProviderConfig] = Field(
         default_factory=lambda: {
             "openai": EmbeddingProviderConfig(
-                models=["text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"],
+                models={
+                    "text-embedding-3-large": {"dimension": 3072, "max_input_tokens": 8191},
+                    "text-embedding-3-small": {"dimension": 1536, "max_input_tokens": 8191},
+                    "text-embedding-ada-002": {"dimension": 1536, "max_input_tokens": 8191},
+                },
                 default_model="text-embedding-3-large",
                 dimension=3072,
                 max_input_tokens=8191,
             ),
             "bge": EmbeddingProviderConfig(
-                models=["bge-large-en-v1.5", "bge-base-en-v1.5", "bge-small-en-v1.5", "bge-m3"],
+                models={
+                    "bge-large-en-v1.5": {"dimension": 1024, "max_input_tokens": 512},
+                    "bge-base-en-v1.5": {"dimension": 768, "max_input_tokens": 512},
+                    "bge-small-en-v1.5": {"dimension": 384, "max_input_tokens": 512},
+                    "bge-m3": {"dimension": 1024, "max_input_tokens": 8192},
+                },
                 default_model="bge-m3",
                 dimension=1024,
                 max_input_tokens=8192,
                 device="cpu",
             ),
             "e5": EmbeddingProviderConfig(
-                models=["e5-large-v2", "e5-base-v2", "e5-small-v2", "e5-multilingual-large", "e5-mistral-7b"],
+                models={
+                    "e5-large-v2": {"dimension": 1024, "max_input_tokens": 512},
+                    "e5-base-v2": {"dimension": 768, "max_input_tokens": 512},
+                    "e5-small-v2": {"dimension": 384, "max_input_tokens": 512},
+                    "e5-multilingual-large": {"dimension": 1024, "max_input_tokens": 512},
+                    "e5-mistral-7b": {"dimension": 4096, "max_input_tokens": 32768},
+                },
                 default_model="e5-large-v2",
                 dimension=1024,
                 max_input_tokens=512,
             ),
             "jina": EmbeddingProviderConfig(
-                models=["jina-embeddings-v3", "jina-embeddings-v2", "jina-clip-v2"],
+                models={
+                    "jina-embeddings-v3": {"dimension": 1024, "max_input_tokens": 8192},
+                    "jina-embeddings-v2": {"dimension": 768, "max_input_tokens": 8192},
+                    "jina-clip-v2": {"dimension": 1024, "max_input_tokens": 8192, "multimodal": True},
+                },
                 default_model="jina-embeddings-v3",
                 dimension=1024,
                 max_input_tokens=8192,
             ),
             "nomic": EmbeddingProviderConfig(
-                models=["nomic-embed-text-v1.5", "nomic-embed-vision-v1.5"],
+                models={
+                    "nomic-embed-text-v1.5": {"dimension": 768, "max_input_tokens": 8192},
+                    "nomic-embed-vision-v1.5": {"dimension": 768, "max_input_tokens": 8192, "multimodal": True},
+                },
                 default_model="nomic-embed-text-v1.5",
                 dimension=768,
                 max_input_tokens=8192,
             ),
             "sentence_transformers": EmbeddingProviderConfig(
-                models=["all-MiniLM-L6-v2", "all-mpnet-base-v2"],
+                models={
+                    "all-MiniLM-L6-v2": {"dimension": 384, "max_input_tokens": 256},
+                    "all-mpnet-base-v2": {"dimension": 768, "max_input_tokens": 384},
+                },
                 default_model="all-mpnet-base-v2",
                 dimension=768,
                 max_input_tokens=384,
                 device="cpu",
             ),
-            "custom": EmbeddingProviderConfig(enabled=False, models=[], default_model="", dimension=None),
+            "custom": EmbeddingProviderConfig(enabled=False, models={}, default_model="", dimension=None),
         }
     )
     pipeline: EmbeddingPipelineSettings = Field(default_factory=EmbeddingPipelineSettings)
@@ -776,6 +801,7 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
         case_sensitive=False,
         extra="ignore",
+        protected_namespaces=(),
     )
 
     project_name: str = "NeuralCore"
