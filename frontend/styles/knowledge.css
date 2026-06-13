@@ -1,0 +1,124 @@
+/* styles/knowledge.css */
+
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px dashed hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  background: hsl(var(--muted) / 0.4);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  text-align: center;
+}
+
+.upload-dropzone[data-active='true'] {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+}
+
+.chunk-card {
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: 0.875rem 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.chunk-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.chunk-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.chunk-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.chunk-card-content {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: hsl(var(--foreground));
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chunk-card-content.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.embedding-heatmap {
+  display: grid;
+  grid-template-columns: repeat(32, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+}
+
+.embedding-cell {
+  aspect-ratio: 1;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.metadata-key {
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.metadata-value {
+  color: hsl(var(--foreground));
+  word-break: break-word;
+}
+
+.document-status-icon[data-status='ready'] {
+  color: hsl(var(--success));
+}
+
+.document-status-icon[data-status='processing'] {
+  color: hsl(var(--primary));
+}
+
+.document-status-icon[data-status='failed'] {
+  color: hsl(var(--destructive));
+}
+
+.document-status-icon[data-status='queued'] {
+  color: hsl(var(--muted-foreground));
+}
+
+.upload-progress-bar {
+  height: 0.25rem;
+  width: 100%;
+  border-radius: 9999px;
+  background: hsl(var(--muted));
+  overflow: hidden;
+}
+
+.upload-progress-bar-fill {
+  height: 100%;
+  background: hsl(var(--primary));
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}

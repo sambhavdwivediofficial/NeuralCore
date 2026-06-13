@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/components/*": ["./components/*"],
+      "@/context/*": ["./context/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/services/*": ["./services/*"],
+      "@/styles/*": ["./styles/*"],
+      "@/public/*": ["./public/*"]
+    },
+    "jsx": "preserve",
+    "allowJs": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2020"
+  },
+  "exclude": ["node_modules", ".next", "out", "dist"]
+}
