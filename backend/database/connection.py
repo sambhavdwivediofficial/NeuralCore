@@ -6,12 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async
 from settings import Settings
 from database.base import Base
 from database.models import agent, dataset, knowledgebase, memory, project, user, workflow
+from multitenancy.organizations import members, organization
 
 _REGISTERED_MODELS = (
     agent.Agent,
     dataset.Dataset,
     knowledgebase.KnowledgeBase,
     memory.Memory,
+    organization.Organization,
+    members.OrganizationMember,
     project.Project,
     user.User,
     workflow.Workflow,
