@@ -11,7 +11,7 @@ from database.models.memory import Memory
 from database.models.user import User
 from multitenancy.organizations.members import MemberStatus, OrganizationMember
 from multitenancy.security.compliance import organizations_due_for_purge
-from queue.celery import celery_app, run_async
+from task_queue.celery import celery_app, run_async
 
 logger = logging.getLogger(__name__)
 

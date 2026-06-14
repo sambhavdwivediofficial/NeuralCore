@@ -64,6 +64,6 @@ celery_app.conf.update(
     task_soft_time_limit=settings.agents.scheduler.task_timeout_seconds * 2,
 )
 
-from queue.scheduler import build_beat_schedule  # noqa: E402
+from task_queue.scheduler import build_beat_schedule  # noqa: E402
 
 celery_app.conf.beat_schedule = build_beat_schedule()

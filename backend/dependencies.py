@@ -17,7 +17,7 @@ from database.models.user import User
 from database.repositories.user_repository import UserRepository
 from auth.jwt import decode_access_token
 from auth.permissions import role_has_permission
-from queue.redis import get_redis_client
+from task_queue.redis import get_redis_client
 from multitenancy.tenant_context import TenantContext
 from multitenancy.tenant_resolver import resolve_tenant_context
 

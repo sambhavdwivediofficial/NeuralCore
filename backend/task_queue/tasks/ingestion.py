@@ -9,8 +9,8 @@ from sqlalchemy import select
 
 from database.connection import get_session_factory
 from database.models.knowledgebase import KnowledgeBase, KnowledgeBaseStatus
-from queue.celery import celery_app, run_async
-from queue.tasks.embeddings import generate_embeddings_for_chunks
+from task_queue.celery import celery_app, run_async
+from task_queue.tasks.embeddings import generate_embeddings_for_chunks
 from settings import get_settings
 
 logger = logging.getLogger(__name__)

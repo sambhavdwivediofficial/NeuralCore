@@ -5,7 +5,7 @@ import logging
 import uuid
 from typing import Any
 
-from queue.celery import celery_app, run_async
+from task_queue.celery import celery_app, run_async
 from settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,6 @@ async def _invalidate_knowledge_base_cache(knowledge_base_id: str) -> dict[str, 
     acks_late=True,
 )
 def reindex_knowledge_base(self, knowledge_base_id: str) -> dict[str, Any]:
-    from queue.tasks.embeddings import _refresh_knowledge_base_embeddings
+    from task_queue.tasks.embeddings import _refresh_knowledge_base_embeddings
 
     return run_async(_refresh_knowledge_base_embeddings(uuid.UUID(knowledge_base_id)))

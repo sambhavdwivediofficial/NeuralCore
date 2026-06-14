@@ -12,8 +12,8 @@ from celery.signals import (
 )
 
 from database.connection import dispose_engine, get_engine, init_engine
-from queue.celery import celery_app
-from queue.redis import close_redis_pool, init_redis_pool
+from task_queue.celery import celery_app
+from task_queue.redis import close_redis_pool, init_redis_pool
 from settings import get_settings
 
 logger = logging.getLogger("neuralcore.worker")

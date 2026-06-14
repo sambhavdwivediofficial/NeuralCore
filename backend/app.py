@@ -19,7 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from settings import get_settings
 from database.connection import dispose_engine, init_engine
-from queue.redis import close_redis_pool, init_redis_pool
+from task_queue.redis import close_redis_pool, init_redis_pool
 from monitoring.logging import configure_logging
 from monitoring.tracing import configure_tracing
 from api.exceptions import (

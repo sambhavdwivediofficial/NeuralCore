@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from database.connection import get_session_factory
 from database.models.knowledgebase import KnowledgeBase, KnowledgeBaseStatus
-from queue.celery import celery_app, run_async
+from task_queue.celery import celery_app, run_async
 from settings import get_settings
 
 logger = logging.getLogger(__name__)
