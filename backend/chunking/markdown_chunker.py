@@ -6,7 +6,7 @@ import re
 from chunking.base_chunker import BaseChunker, count_tokens, recursive_split_text, register_chunker
 from database.models.knowledgebase import ChunkingStrategy
 
-HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.*)$")
+HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.*)$", re.MULTILINE)
 
 _FALLBACK_SEPARATORS: list[str] = ["\n\n", "\n", ". ", " ", ""]
 

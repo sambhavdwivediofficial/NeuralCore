@@ -76,7 +76,7 @@ class CharacterChunker(BaseChunker):
         return [chunk.strip() for i in range(0, len(text), step) if (chunk := text[i : i + char_size]).strip()]
 
 
-def _apply_overlap(chunks: list[str], chunk_overlap: int, separator: str) -> list[str]:
+def apply_overlap(chunks: list[str], chunk_overlap: int, separator: str) -> list[str]:
     if chunk_overlap <= 0 or len(chunks) <= 1:
         return chunks
     overlapped = [chunks[0]]
@@ -126,7 +126,7 @@ def recursive_split_text(text: str, separators: list[str], chunk_size: int, chun
     if current.strip():
         chunks.append(current.strip())
 
-    return _apply_overlap(chunks, chunk_overlap, separator)
+    return apply_overlap(chunks, chunk_overlap, separator)
 
 
 _CHUNKER_REGISTRY: dict[ChunkingStrategy, type[BaseChunker]] = {ChunkingStrategy.CHARACTER: CharacterChunker}
