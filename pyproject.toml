@@ -1,0 +1,113 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "neuralcore"
+version = "1.1.0-dev"
+description = "Enterprise AI Infrastructure Platform — RAG, Agentic RAG, Multi-Agent Systems"
+readme = "README.md"
+license = { text = "All Rights Reserved" }
+authors = [{ name = "Sambhav Dwivedi", email = "sambhavdwivedi@outlook.com" }]
+maintainers = [{ name = "Sambhav Dwivedi", email = "sambhavdwivedi@outlook.com" }]
+requires-python = ">=3.13"
+keywords = ["ai", "rag", "agents", "llm", "vector-search", "enterprise"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://www.sambhavdwivedi.in"
+Repository = "https://github.com/sambhavdwivediofficial/NeuralCore"
+LinkedIn = "https://www.linkedin.com/in/sambhavdwivedi"
+
+[project.scripts]
+neuralcore-api = "backend.main:run"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+indent-width = 4
+src = ["backend"]
+exclude = [
+    ".git", ".venv", "__pycache__", "build", "dist",
+    "*.egg-info", "rust_engine/target",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # flake8-bugbear
+    "C4",       # flake8-comprehensions
+    "UP",       # pyupgrade
+    "SIM",      # flake8-simplify
+    "TCH",      # flake8-type-checking
+    "RUF",      # ruff-specific
+]
+ignore = ["E501", "B008", "RUF012"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend"]
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = false
+no_implicit_optional = true
+exclude = ["rust_engine/", "build/", "dist/"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "-p", "no:warnings",
+]
+markers = [
+    "unit: fast, isolated unit tests",
+    "integration: tests requiring live services (postgres, redis, qdrant)",
+    "slow: tests taking more than 5 seconds",
+]
+
+[tool.coverage.run]
+source = ["backend"]
+omit = ["backend/tests/*", "**/__pycache__/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
