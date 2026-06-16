@@ -109,6 +109,11 @@
   * {
     @apply border-border;
   }
+  
+  ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
 
   html {
     -webkit-text-size-adjust: 100%;
@@ -125,10 +130,6 @@
 
   ::selection {
     @apply bg-primary/20;
-  }
-
-  *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
