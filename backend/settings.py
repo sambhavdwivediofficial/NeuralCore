@@ -557,7 +557,7 @@ class QueryRewritingSettings(BaseModel):
     decomposition_enabled: bool = True
     expansion_enabled: bool = True
     splade_enabled: bool = False
-    rewriting_provider: LLMProviderName = LLMProviderName.LOCAL
+    rewriting_provider: LLMProviderName = LLMProviderName.OLLAMA
 
 
 class RerankingDefaultsSettings(BaseModel):
@@ -723,9 +723,10 @@ class ModelProviderConfig(BaseModel):
 
 
 class ModelGatewaySettings(BaseModel):
-    default_provider: LLMProviderName = LLMProviderName.LOCAL
+    default_provider: LLMProviderName = LLMProviderName.OLLAMA
     fallback_chain: list[LLMProviderName] = Field(
-        default_factory=lambda: [LLMProviderName.LOCAL, LLMProviderName.OLLAMA, LLMProviderName.OPENAI]
+        # default_factory=lambda: [LLMProviderName.LOCAL, LLMProviderName.OLLAMA, LLMProviderName.OPENAI]
+        default_factory=lambda: [LLMProviderName.OLLAMA]
     )
     providers: dict[str, ModelProviderConfig] = Field(
         default_factory=lambda: {
@@ -734,12 +735,14 @@ class ModelGatewaySettings(BaseModel):
                 default_model="neuralcore-48b",
                 context_window=32768,
                 timeout_seconds=180.0,
+                enabled=False,
             ),
             "ollama": ModelProviderConfig(
-                base_url="http://ollama:11434",
-                default_model="llama3.1",
+                base_url="http://localhost:11434",
+                default_model="Roxan",
                 context_window=8192,
-                enabled=False,
+                enabled=True,
+                timeout_seconds=180.0,
             ),
             "openai": ModelProviderConfig(
                 default_model="gpt-4o",
