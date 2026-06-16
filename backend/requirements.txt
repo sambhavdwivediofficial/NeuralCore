@@ -23,6 +23,9 @@ PyJWT[crypto]==2.10.1
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 email-validator==2.2.0
+motor==3.7.0
+asyncmy==0.2.10
+youtube-transcript-api==0.6.3
 pyotp==2.9.0
 qrcode==8.0
 orjson==3.10.12
