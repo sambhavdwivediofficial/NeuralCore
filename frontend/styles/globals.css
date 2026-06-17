@@ -134,6 +134,49 @@
   }
 }
 
+  .orbit-spinner {
+    display: inline-block;
+    position: relative;
+  }
+
+  .orbit-spinner-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+
+  .orbit-spinner-ring--outer {
+    border-top-color: hsl(var(--primary));
+    border-right-color: hsl(var(--primary));
+    animation: orbit-spin-clockwise 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  }
+
+  .orbit-spinner-ring--inner {
+    inset: 22%;
+    border-bottom-color: hsl(var(--primary) / 0.55);
+    border-left-color: hsl(var(--primary) / 0.55);
+    animation: orbit-spin-counter 0.75s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  }
+
+  @keyframes orbit-spin-clockwise {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes orbit-spin-counter {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;

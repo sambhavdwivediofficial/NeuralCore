@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /projects
+Disallow: /agents
+Disallow: /knowledge-bases
+Disallow: /retrieval-debugger
+Disallow: /vector-stores
+Disallow: /monitoring
+Disallow: /settings
+Allow: /login
+Allow: /$
+
+Sitemap: https://neuralcore.sambhavdwivedi.in/sitemap.xml

@@ -45,3 +45,35 @@ export async function listSessions() {
 export async function revokeSession(sessionId) {
   return apiPost(`/auth/sessions/${sessionId}/revoke`, {});
 }
+
+export async function toggleTwoFactor(enabled) {
+  return apiPost('/auth/mfa/toggle', { enabled });
+}
+
+export async function listApiKeys() {
+  return apiGet('/auth/api-keys');
+}
+
+export async function createApiKey(payload) {
+  return apiPost('/auth/api-keys', payload);
+}
+
+export async function revokeApiKey(keyId) {
+  return apiPost(`/auth/api-keys/${keyId}/revoke`, {});
+}
+
+export async function listTeamMembers() {
+  return apiGet('/auth/users');
+}
+
+export async function inviteUser(payload) {
+  return apiPost('/auth/users/invite', payload);
+}
+
+export async function updateUserRole(userId, role) {
+  return apiPatch(`/auth/users/${userId}`, { role });
+}
+
+export async function removeUser(userId) {
+  return apiPost(`/auth/users/${userId}/remove`, {});
+}

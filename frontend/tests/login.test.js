@@ -1,0 +1,98 @@
+// tests/login.test.js
+
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
+import LoginPage from '@/app/login/page';
+import * as authService from '@/services/auth';
+
+jest.mock('@/services/auth');
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+}));
+
+describe('LoginPage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders email and password fields', () => {
+    render(<LoginPage />);
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+  });
+
+  it('shows validation errors when submitting empty form', async () => {
+    render(<LoginPage />);
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
+    await userEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/email is required|invalid email/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation error for invalid email format', async () => {
+    render(<LoginPage />);
+    await userEvent.type(screen.getByLabelText(/email/i), 'not-an-email');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+    });
+  });
+
+  it('calls login service with correct credentials on submit', async () => {
+    authService.login.mockResolvedValue({
+      user: { id: '1', email: 'user@example.com', name: 'Test User' },
+      token: 'fake-jwt-token',
+    });
+
+    render(<LoginPage />);
+    await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(authService.login).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        password: 'password123',
+      });
+    });
+  });
+
+  it('displays an error message when login fails', async () => {
+    authService.login.mockRejectedValue({
+      response: { data: { message: 'Invalid email or password' } },
+    });
+
+    render(<LoginPage />);
+    await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'wrongpassword');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+    });
+  });
+
+  it('disables the submit button while a login request is in flight', async () => {
+    let resolveLogin;
+    authService.login.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveLogin = resolve;
+        })
+    );
+
+    render(<LoginPage />);
+    await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
+    await userEvent.click(submitButton);
+
+    expect(submitButton).toBeDisabled();
+    resolveLogin({ user: { id: '1' }, token: 'token' });
+  });
+});
