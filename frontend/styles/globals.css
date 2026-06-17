@@ -126,6 +126,7 @@
     font-family: var(--font-sans);
     font-size: 0.875rem;
     line-height: 1.5;
+    user-select: none;
   }
 
   ::selection {
