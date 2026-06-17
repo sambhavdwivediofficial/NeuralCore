@@ -130,7 +130,7 @@ class PaginationParams:
     def __init__(
         self,
         settings: Annotated[Settings, Depends(get_app_settings)],
-        page: int = Query(default=1, ge=1),
+        page: int = Query(1, ge=1),
         page_size: Optional[int] = Query(default=None, ge=1),
     ) -> None:
         max_page_size = settings.app.pagination.max_page_size

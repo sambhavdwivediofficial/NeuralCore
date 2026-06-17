@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt requirements-prod.txt ./
+COPY backend/requirements.txt backend/requirements-prod.txt ./
 
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip setuptools wheel && \

@@ -139,7 +139,7 @@ class ServerSettings(BaseModel):
 
 
 class CORSSettings(BaseModel):
-    allow_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    allow_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5242"])
     allow_methods: list[str] = Field(default_factory=lambda: ["*"])
     allow_headers: list[str] = Field(default_factory=lambda: ["*"])
     allow_credentials: bool = True

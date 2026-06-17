@@ -40,6 +40,7 @@ api:
 cors:
   enabled: true
   allow_origins:
+    - "http://localhost:5242"
     - "https://neuralcore.sambhavdwivedi.in"
     - "https://docs.neuralcore.sambhavdwivedi.in"
   allow_origin_regex: null

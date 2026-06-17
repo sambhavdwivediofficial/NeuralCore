@@ -4,6 +4,7 @@ from __future__ import annotations
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from fastapi.openapi.docs import get_redoc_html
 
 import sentry_sdk
 from fastapi import FastAPI, Request, status
@@ -74,7 +75,7 @@ def create_app() -> FastAPI:
         version=settings.version,
         openapi_url=f"{settings.api_prefix}/openapi.json",
         docs_url=f"{settings.api_prefix}/docs",
-        redoc_url=f"{settings.api_prefix}/redoc",
+        redoc_url=None,
         default_response_class=ORJSONResponse,
         lifespan=lifespan,
     )
@@ -131,6 +132,14 @@ def create_app() -> FastAPI:
                 "status": "ready" if healthy else "not_ready",
                 "checks": {result.name: result.healthy for result in results},
             },
+        )
+    
+    @app.get("/api/v1/redoc", include_in_schema=False)
+    async def custom_redoc():
+        return get_redoc_html(
+            openapi_url="/api/v1/openapi.json",
+            title="NeuralCore - ReDoc",
+            redoc_js_url="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js",
         )
 
     return app

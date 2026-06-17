@@ -41,7 +41,7 @@ WORKDIR /app
 
 COPY --from=builder --chown=neuralcore:neuralcore /opt/venv /opt/venv
 
-COPY --chown=neuralcore:neuralcore backend/queue/ ./worker
+COPY --chown=neuralcore:neuralcore backend/task_queue/ ./worker
 COPY --chown=neuralcore:neuralcore backend/settings.py ./
 
 RUN mkdir -p /app/logs && chown -R neuralcore:neuralcore /app/logs
