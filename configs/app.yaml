@@ -6,9 +6,9 @@ app:
   environment: production
   debug: false
   timezone: UTC
-  base_url: "https://api.neuralcore.ai"
-  frontend_url: "https://app.neuralcore.ai"
-  docs_url: "https://docs.neuralcore.ai"
+  base_url: "https://api.neuralcore.sambhavdwivedi.in"
+  frontend_url: "https://neuralcore.sambhavdwivedi.in"
+  docs_url: "https://docs.neuralcore.sambhavdwivedi.in"
 
 server:
   host: "0.0.0.0"
@@ -40,8 +40,8 @@ api:
 cors:
   enabled: true
   allow_origins:
-    - "https://app.neuralcore.ai"
-    - "https://docs.neuralcore.ai"
+    - "https://neuralcore.sambhavdwivedi.in"
+    - "https://docs.neuralcore.sambhavdwivedi.in"
   allow_origin_regex: null
   allow_methods:
     - GET
@@ -71,8 +71,8 @@ cors:
 security:
   secret_key: "${SECRET_KEY}"
   allowed_hosts:
-    - "api.neuralcore.ai"
-    - "app.neuralcore.ai"
+    - "api.neuralcore.sambhavdwivedi.in"
+    - "neuralcore.sambhavdwivedi.in"
     - "localhost"
   trusted_proxies:
     - "10.0.0.0/8"

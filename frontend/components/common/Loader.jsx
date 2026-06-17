@@ -1,16 +1,25 @@
 // components/common/Loader.jsx
 
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function Spinner({ className, size = 16 }) {
-  return <Loader2 className={cn('animate-spin text-muted-foreground', className)} style={{ width: size, height: size }} />;
+export function Spinner({ className, size = 20 }) {
+  return (
+    <span
+      className={cn('orbit-spinner', className)}
+      style={{ width: size, height: size }}
+      role="status"
+      aria-label="Loading"
+    >
+      <span className="orbit-spinner-ring orbit-spinner-ring--outer" />
+      <span className="orbit-spinner-ring orbit-spinner-ring--inner" />
+    </span>
+  );
 }
 
 export function PageLoader({ label = 'Loading' }) {
   return (
-    <div className="flex h-full min-h-[40vh] w-full flex-col items-center justify-center gap-3">
-      <Spinner size={22} />
+    <div className="flex h-full min-h-[80vh] w-full flex-col items-center justify-center gap-3">
+      <Spinner size={66} />
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
@@ -22,7 +31,7 @@ export function Skeleton({ className }) {
 
 export function SkeletonText({ lines = 3, className }) {
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div className={cn('flex flex-col gap-2', className)} data-testid="skeleton-text">
       {Array.from({ length: lines }).map((_, index) => (
         <Skeleton
           key={index}
@@ -35,7 +44,7 @@ export function SkeletonText({ lines = 3, className }) {
 
 export function SkeletonCard({ className }) {
   return (
-    <div className={cn('card-surface flex flex-col gap-3 p-4', className)}>
+    <div className={cn('card-surface flex flex-col gap-3 p-4', className)} data-testid="skeleton-card">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-4 w-4 rounded-full" />
@@ -48,7 +57,7 @@ export function SkeletonCard({ className }) {
 
 export function SkeletonTable({ rows = 5, columns = 4 }) {
   return (
-    <div className="card-surface overflow-hidden">
+    <div className="card-surface overflow-hidden" data-testid="skeleton-table">
       <div className="border-b border-border p-3">
         <div className="flex gap-4">
           {Array.from({ length: columns }).map((_, index) => (
@@ -74,8 +83,23 @@ export function SkeletonTable({ rows = 5, columns = 4 }) {
 export function InlineLoader({ label }) {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Spinner size={14} />
+      <Spinner size={16} />
       {label ? <span>{label}</span> : null}
     </div>
   );
+}
+
+export function OverlayLoader({ label = 'Loading', show = true }) {
+  if (!show) return null;
+
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/70 backdrop-blur-sm">
+      <Spinner size={32} />
+      {label ? <p className="text-sm text-muted-foreground">{label}</p> : null}
+    </div>
+  );
+}
+
+export function ButtonSpinner({ className }) {
+  return <Spinner size={14} className={cn('shrink-0', className)} />;
 }

@@ -45,6 +45,28 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var theme = window.localStorage.getItem('nc_theme') || 'system';
+                  var isDark =
+                    theme === 'dark' ||
+                    (theme === 'system' &&
+                      window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
         <SettingsProvider>
           <AuthProvider>

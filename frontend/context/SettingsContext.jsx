@@ -17,7 +17,7 @@ const THEME_KEY = 'nc_theme';
 const SIDEBAR_KEY = 'nc_sidebar_collapsed';
 
 export function SettingsProvider({ children }) {
-  const [theme, setTheme] = useState('system');
+  const [theme, setThemeState] = useState('system');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -27,37 +27,42 @@ export function SettingsProvider({ children }) {
     const storedTheme = window.localStorage.getItem(THEME_KEY) || 'system';
     const storedSidebar = window.localStorage.getItem(SIDEBAR_KEY) === 'true';
 
-    setTheme(storedTheme);
+    setThemeState(storedTheme);
     setSidebarCollapsed(storedSidebar);
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return;
-
+  const applyTheme = useCallback((value) => {
     const root = window.document.documentElement;
-    const apply = (value) => {
-      if (value === 'dark') {
-        root.classList.add('dark');
-      } else if (value === 'light') {
-        root.classList.remove('dark');
-      } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.classList.toggle('dark', prefersDark);
-      }
-    };
-
-    apply(theme);
-    window.localStorage.setItem(THEME_KEY, theme);
-
-    if (theme === 'system') {
-      const media = window.matchMedia('(prefers-color-scheme: dark)');
-      const listener = (event) => root.classList.toggle('dark', event.matches);
-      media.addEventListener('change', listener);
-      return () => media.removeEventListener('change', listener);
+    if (value === 'dark') {
+      root.classList.add('dark');
+    } else if (value === 'light') {
+      root.classList.remove('dark');
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.toggle('dark', prefersDark);
     }
+  }, []);
 
-    return undefined;
+  const setTheme = useCallback(
+    (value) => {
+      setThemeState(value);
+      if (typeof window === 'undefined') return;
+      window.localStorage.setItem(THEME_KEY, value);
+      applyTheme(value);
+    },
+    [applyTheme]
+  );
+
+  useEffect(() => {
+    if (!mounted || typeof window === 'undefined' || theme !== 'system') return;
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const listener = (event) => {
+      window.document.documentElement.classList.toggle('dark', event.matches);
+    };
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
   }, [theme, mounted]);
 
   const toggleSidebar = useCallback(() => {
@@ -78,7 +83,7 @@ export function SettingsProvider({ children }) {
       toggleSidebar,
       mounted,
     }),
-    [theme, sidebarCollapsed, toggleSidebar, mounted]
+    [theme, setTheme, sidebarCollapsed, toggleSidebar, mounted]
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
