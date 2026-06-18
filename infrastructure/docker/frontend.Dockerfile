@@ -3,7 +3,7 @@
 FROM node:20-alpine as dependencies
 
 LABEL maintainer="Sambhav Dwivedi <sambhavdwivedi@outlook.com>"
-LABEL description="NeuralCore Frontend Dependencies"
+LABEL description="NeuralCore Dependencies"
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm install --legacy-peer-deps
 FROM node:20-alpine as builder
 
 LABEL maintainer="Sambhav Dwivedi <sambhavdwivedi@outlook.com>"
-LABEL description="NeuralCore Frontend Builder"
+LABEL description="NeuralCore Builder"
 
 WORKDIR /app
 
@@ -37,8 +37,8 @@ LABEL maintainer="Sambhav Dwivedi <sambhavdwivedi@outlook.com>"
 
 RUN apk add --no-cache dumb-init curl
 
-RUN addgroup -g 1000 neuralcore && \
-    adduser -D -u 1000 -G neuralcore neuralcore
+RUN addgroup -g 1001 neuralcore && \
+    adduser -D -u 1001 -G neuralcore neuralcore
 
 WORKDIR /app
 
@@ -50,7 +50,7 @@ COPY --from=builder --chown=neuralcore:neuralcore /app/next.config.js next.confi
 COPY --from=builder --chown=neuralcore:neuralcore /app/node_modules ./node_modules
 
 RUN echo '#!/bin/sh\n\
-curl -f http://localhost:3000/health || exit 1\n\
+curl -f http://localhost:5242/health || exit 1\n\
 ' > /app/healthcheck.sh && chmod +x /app/healthcheck.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
@@ -60,13 +60,13 @@ USER neuralcore
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=5242
 
-EXPOSE 3000
+EXPOSE 5242
 
 ENTRYPOINT ["dumb-init", "--"]
 
-CMD ["node_modules/.bin/next", "start"]
+CMD ["node_modules/.bin/next", "start", "-p", "5242"]
 
 LABEL security.scan="enabled"
 LABEL security.updates="weekly"

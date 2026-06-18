@@ -17,7 +17,7 @@ data:
   QDRANT_HOST: "qdrant.neuralcore.svc.cluster.local"
   QDRANT_PORT: "6333"
   ENABLE_CORS: "true"
-  CORS_ORIGINS: '["http://localhost:3000", "https://neuralcore.io"]'
+  CORS_ORIGINS: '["http://localhost:5242", "https://neuralcore.sambhavdwivedi.in"]'
 
 ---
 apiVersion: apps/v1

@@ -7,21 +7,21 @@ global:
     cluster: neuralcore
     environment: production
     region: us-east-1
-  metric_relabel_configs:
-    - source_labels: [__name__]
-      regex: 'go_.*'
-      action: drop
+  # metric_relabel_configs:
+  #   - source_labels: [__name__]
+  #     regex: 'go_.*'
+  #     action: drop
 
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: ['alertmanager:9093']
-      relabel_configs:
-        - source_labels: [__address__]
-          replacement: ${1}
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+      # relabel_configs:
+      #   - source_labels: [__address__]
+      #     replacement: ${1}
 
-rule_files:
-  - '/etc/prometheus/rules/*.yml'
+# rule_files:
+#   - '/etc/prometheus/rules/*.yml'
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -275,15 +275,15 @@ scrape_configs:
     scrape_interval: 30s
     scrape_timeout: 10s
     static_configs:
-      - targets: ['qdrant.neuralcore.svc.cluster.local:6333']
+      - targets: ['qdrant:6383']
     metric_relabel_configs:
       - source_labels: [__name__]
         regex: 'qdrant_.*'
         action: keep
 
-  - job_name: 'alertmanager'
-    static_configs:
-      - targets: ['alertmanager:9093']
+  # - job_name: 'alertmanager'
+  #   static_configs:
+  #     - targets: ['alertmanager:9093']
 
   - job_name: 'loki'
     static_configs:
@@ -292,3 +292,4 @@ scrape_configs:
       - source_labels: [__name__]
         regex: 'loki_.*'
         action: keep
+        

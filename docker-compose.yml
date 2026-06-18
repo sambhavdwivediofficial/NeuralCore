@@ -59,18 +59,17 @@ services:
       QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
       QDRANT_READ_ONLY_MODE: "false"
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "6383:6383"
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
       - neuralcore-network
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:6333"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 10s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6383/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -107,7 +106,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
       - "8000:8000"
-      - "9090:9090"
+      # - "9090:9090"
     volumes:
       - ./backend:/app
       - ./configs:/app/configs
@@ -136,6 +135,59 @@ services:
     # command: /app/start.sh
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
+  # workers:
+  #   build:
+  #     context: .
+  #     dockerfile: infrastructure/docker/worker.Dockerfile
+  #   container_name: neuralcore-workers-dev
+  #   environment:
+  #     PYTHONUNBUFFERED: "1"
+  #     PYTHONDONTWRITEBYTECODE: "1"
+  #     LOG_LEVEL: debug
+  #     NEURALCORE_ENV: development
+  #     DATABASE_HOST: postgres
+  #     DATABASE_PORT: "5432"
+  #     DATABASE_NAME: neuralcore
+  #     DATABASE_USER: neuralcore
+  #     DATABASE_PASSWORD: dev-password-change-in-prod
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: "6379"
+  #     REDIS_PASSWORD: dev-redis-password-change-in-prod
+  #     QDRANT_HOST: qdrant
+  #     QDRANT_PORT: "6333"
+  #     QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
+  #     CELERY_BROKER_URL: redis://:dev-redis-password-change-in-prod@redis:6379/0
+  #     CELERY_RESULT_BACKEND: redis://:dev-redis-password-change-in-prod@redis:6379/1
+  #     WORKER_PREFETCH_MULTIPLIER: "4"
+  #     WORKER_MAX_TASKS_PER_CHILD: "1000"
+  #     WORKER_TIME_LIMIT: "3600"
+  #     WORKER_SOFT_TIME_LIMIT: "3300"
+  #     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./configs:/app/configs
+  #   networks:
+  #     - neuralcore-network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     qdrant:
+  #       condition: service_started
+  #     api:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   entrypoint: []
+  #   command: /app/start.sh
+  #   command: celery -A workers.tasks worker --loglevel=info
+
   workers:
     build:
       context: .
@@ -159,68 +211,49 @@ services:
       QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
       CELERY_BROKER_URL: redis://:dev-redis-password-change-in-prod@redis:6379/0
       CELERY_RESULT_BACKEND: redis://:dev-redis-password-change-in-prod@redis:6379/1
-      WORKER_PREFETCH_MULTIPLIER: "4"
-      WORKER_MAX_TASKS_PER_CHILD: "1000"
-      WORKER_TIME_LIMIT: "3600"
-      WORKER_SOFT_TIME_LIMIT: "3300"
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - ./backend:/app
       - ./configs:/app/configs
     networks:
-      - neuralcore-network
+      - neuralcore-network  # ← SAME NETWORK
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      qdrant:
-        condition: service_started
       api:
         condition: service_healthy
+    command: sleep infinity  # ← ADD THIS
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+    container_name: neuralcore-frontend-dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_APP_URL: http://localhost:5242
+    ports:
+      - "5242:5242"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - neuralcore-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5242"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    entrypoint: []
-    # command: /app/start.sh
-    command: celery -A workers.tasks worker --loglevel=info
-
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: infrastructure/docker/frontend.Dockerfile
-  #   container_name: neuralcore-frontend-dev
-  #   environment:
-  #     NODE_ENV: development
-  #     NEXT_PUBLIC_API_URL: http://localhost:8000
-  #     NEXT_PUBLIC_APP_URL: http://localhost:3000
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   networks:
-  #     - neuralcore-network
-  #   depends_on:
-  #     api:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 60s
-  #   restart: unless-stopped
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
 
   prometheus:
     image: prom/prometheus:latest
@@ -260,7 +293,7 @@ services:
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./infrastructure/monitoring/grafana.json:/etc/grafana/provisioning/dashboards/neuralcore.json
+      # - ./infrastructure/monitoring/grafana.json:/etc/grafana/provisioning/dashboards/neuralcore.json
       - grafana_data:/var/lib/grafana
     ports:
       - "3001:3000"
@@ -292,7 +325,7 @@ services:
       - "3100:3100"
     networks:
       - neuralcore-network
-    command: -config.file=/etc/loki/local-config.yaml
+    # command: -config.file=/etc/loki/local-config.yaml
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
       interval: 30s
