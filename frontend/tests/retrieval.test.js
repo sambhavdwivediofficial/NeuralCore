@@ -12,9 +12,31 @@ import * as retrievalHook from '@/hooks/useRetrieval';
 
 jest.mock('@/hooks/useKnowledgeBases');
 jest.mock('@/context/ProjectContext');
+jest.mock('@/context/SettingsContext', () => ({
+  useSettingsContext: () => ({
+    theme: 'dark',
+    setTheme: jest.fn(),
+    sidebarCollapsed: false,
+    toggleSidebar: jest.fn(),
+    mounted: true,
+  }),
+}));
 jest.mock('@/hooks/useRetrieval');
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/retrieval-debugger',
+}));
+jest.mock('@/context/AuthContext', () => ({
+  useAuthContext: () => ({
+    user: { id: 'user_1', name: 'Test User', email: 'test@example.com', role: 'admin' },
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+    updateUser: jest.fn(),
+    refresh: jest.fn(),
+  }),
 }));
 
 const mockKnowledgeBases = [
@@ -41,7 +63,13 @@ describe('RetrievalDebuggerPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    projectContext.useProjectContext.mockReturnValue({ activeProjectId: 'proj_1' });
+    projectContext.useProjectContext.mockReturnValue({
+      projects: [],
+      activeProjectId: 'proj_1',
+      activeProject: { id: 'proj_1', name: 'Test Project' },
+      setActiveProject: jest.fn(),
+      isLoading: false,
+    });
     kbHook.useKnowledgeBases.mockReturnValue({ knowledgeBases: mockKnowledgeBases });
     retrievalHook.useRetrievalQuery.mockReturnValue({
       result: null,

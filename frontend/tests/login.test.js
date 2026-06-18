@@ -9,6 +9,7 @@ import * as authService from '@/services/auth';
 jest.mock('@/services/auth');
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe('LoginPage', () => {

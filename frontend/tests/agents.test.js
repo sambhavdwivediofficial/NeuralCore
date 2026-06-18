@@ -11,10 +11,32 @@ import * as agentContext from '@/context/AgentContext';
 
 jest.mock('@/hooks/useAgents');
 jest.mock('@/context/ProjectContext');
+jest.mock('@/context/SettingsContext', () => ({
+  useSettingsContext: () => ({
+    theme: 'dark',
+    setTheme: jest.fn(),
+    sidebarCollapsed: false,
+    toggleSidebar: jest.fn(),
+    mounted: true,
+  }),
+}));
 jest.mock('@/context/AgentContext');
 jest.mock('@/services/agents');
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/agents',
+}));
+jest.mock('@/context/AuthContext', () => ({
+  useAuthContext: () => ({
+    user: { id: 'user_1', name: 'Test User', email: 'test@example.com', role: 'admin' },
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+    updateUser: jest.fn(),
+    refresh: jest.fn(),
+  }),
 }));
 
 const mockAgents = [
@@ -40,7 +62,13 @@ describe('AgentsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    projectContext.useProjectContext.mockReturnValue({ activeProjectId: 'proj_1' });
+    projectContext.useProjectContext.mockReturnValue({
+      projects: [],
+      activeProjectId: 'proj_1',
+      activeProject: { id: 'proj_1', name: 'Test Project' },
+      setActiveProject: jest.fn(),
+      isLoading: false,
+    });
     agentsHook.useAgents.mockReturnValue({
       agents: mockAgents,
       isLoading: false,
@@ -121,28 +149,38 @@ describe('AgentRunner', () => {
     });
   });
 
-  it('renders execution timeline steps when a run is active', () => {
+  it('renders execution timeline steps when a run is active', async () => {
+    const startRun = jest.fn().mockResolvedValue('run_123');
     agentContext.useAgentContext.mockReturnValue({
-      startRun: jest.fn(),
+      startRun,
       stopRun: jest.fn(),
-      getRun: () => ({
-        status: 'running',
-        output: 'Partial output so far...',
-        steps: [
-          {
-            id: 'step_1',
-            title: 'Planning',
-            state: 'complete',
-            detail: 'Created plan',
-            duration_ms: 320,
-          },
-          { id: 'step_2', title: 'Retrieving context', state: 'running', detail: null },
-        ],
-      }),
+      getRun: (runId) =>
+        runId === 'run_123'
+          ? {
+              status: 'running',
+              output: 'Partial output so far...',
+              steps: [
+                {
+                  id: 'step_1',
+                  title: 'Planning',
+                  state: 'complete',
+                  detail: 'Created plan',
+                  duration_ms: 320,
+                },
+                { id: 'step_2', title: 'Retrieving context', state: 'running', detail: null },
+              ],
+            }
+          : null,
     });
 
     render(<AgentRunner agentId="agent_1" />);
-    expect(screen.getByText('Planning')).toBeInTheDocument();
+    const textarea = screen.getByPlaceholderText(/describe the task/i);
+    await userEvent.type(textarea, 'Summarize the latest quarterly report');
+    await userEvent.click(screen.getByRole('button', { name: /run agent/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Planning')).toBeInTheDocument();
+    });
     expect(screen.getByText('Retrieving context')).toBeInTheDocument();
     expect(screen.getByText(/partial output so far/i)).toBeInTheDocument();
   });

@@ -8,8 +8,30 @@ import * as projectContext from '@/context/ProjectContext';
 
 jest.mock('@/hooks/useProjects');
 jest.mock('@/context/ProjectContext');
+jest.mock('@/context/SettingsContext', () => ({
+  useSettingsContext: () => ({
+    theme: 'dark',
+    setTheme: jest.fn(),
+    sidebarCollapsed: false,
+    toggleSidebar: jest.fn(),
+    mounted: true,
+  }),
+}));
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/dashboard',
+}));
+jest.mock('@/context/AuthContext', () => ({
+  useAuthContext: () => ({
+    user: { id: 'user_1', name: 'Test User', email: 'test@example.com', role: 'admin' },
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+    updateUser: jest.fn(),
+    refresh: jest.fn(),
+  }),
 }));
 
 const mockAnalytics = {
@@ -46,8 +68,10 @@ describe('DashboardPage', () => {
     jest.clearAllMocks();
 
     projectContext.useProjectContext.mockReturnValue({
+      projects: [],
       activeProject: { id: 'proj_1', name: 'Customer Support Assistant' },
       activeProjectId: 'proj_1',
+      setActiveProject: jest.fn(),
       isLoading: false,
     });
 
@@ -90,8 +114,10 @@ describe('DashboardPage', () => {
 
   it('falls back to a generic title when no active project is set', () => {
     projectContext.useProjectContext.mockReturnValue({
+      projects: [],
       activeProject: null,
       activeProjectId: null,
+      setActiveProject: jest.fn(),
       isLoading: false,
     });
 
