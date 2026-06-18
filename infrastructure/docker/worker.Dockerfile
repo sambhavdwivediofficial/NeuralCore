@@ -20,7 +20,7 @@ COPY backend/requirements.txt backend/requirements-worker.txt ./
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
     /opt/venv/bin/pip install --no-cache-dir \
-    celery[redis,amqp]==5.3.4 \
+    celery[redis,amqp]==5.4.0 \
     -r requirements-worker.txt
 
 # Stage 2: Runtime

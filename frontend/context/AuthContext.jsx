@@ -29,7 +29,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    loadUser();
+    const token =
+      typeof document !== 'undefined' &&
+      document.cookie.includes('nc_access_token=');
+  
+    if (token) {
+      loadUser();
+    } else {
+      setIsLoading(false);
+    }
   }, [loadUser]);
 
   const signIn = useCallback(

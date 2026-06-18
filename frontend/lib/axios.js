@@ -44,7 +44,7 @@ apiClient.interceptors.response.use(
           })
           .catch((refreshError) => {
             refreshPromise = null;
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
               window.location.href = '/login';
             }
             throw refreshError;
