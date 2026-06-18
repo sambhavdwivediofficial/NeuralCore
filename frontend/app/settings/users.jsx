@@ -219,7 +219,7 @@ export default function TeamMembersPage() {
               They will receive an email invitation to join this workspace
             </ModalDescription>
           </ModalHeader>
-          <form onSubmit={handleSubmit(handleInvite)} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit(handleInvite)} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="invite-email">Email address</Label>
               <Input

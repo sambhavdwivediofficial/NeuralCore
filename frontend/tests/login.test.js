@@ -26,6 +26,12 @@ jest.mock('@/context/AuthContext', () => {
     }),
   };
 });
+jest.mock('@/components/common/Toast', () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
 
 describe('LoginPage', () => {
   beforeEach(() => {
@@ -55,7 +61,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+      expect(screen.getByText(/enter a valid email address/i)).toBeInTheDocument();
     });
   });
 
@@ -74,11 +80,13 @@ describe('LoginPage', () => {
       expect(authService.login).toHaveBeenCalledWith({
         email: 'user@example.com',
         password: 'password123',
+        remember: true,
       });
     });
   });
 
   it('displays an error message when login fails', async () => {
+    const { toast } = require('@/components/common/Toast');
     authService.login.mockRejectedValue({
       response: { data: { message: 'Invalid email or password' } },
     });
@@ -89,7 +97,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith('Invalid email or password');
     });
   });
 
@@ -109,6 +117,11 @@ describe('LoginPage', () => {
     await userEvent.click(submitButton);
 
     expect(submitButton).toBeDisabled();
+
     resolveLogin({ user: { id: '1' }, token: 'token' });
+
+    await waitFor(() => {
+      expect(submitButton).not.toBeDisabled();
+    });
   });
 });

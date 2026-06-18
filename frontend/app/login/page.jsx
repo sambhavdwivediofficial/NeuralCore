@@ -63,7 +63,11 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-4 p-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="card-surface flex flex-col gap-4 p-6"
+        >
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
