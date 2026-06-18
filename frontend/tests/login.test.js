@@ -11,6 +11,21 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
+jest.mock('@/context/AuthContext', () => {
+  const authService = require('@/services/auth');
+  return {
+    useAuthContext: () => ({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      signIn: async (credentials) => authService.login(credentials),
+      signOut: jest.fn(),
+      updateUser: jest.fn(),
+      refresh: jest.fn(),
+    }),
+  };
+});
 
 describe('LoginPage', () => {
   beforeEach(() => {

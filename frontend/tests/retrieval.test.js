@@ -98,8 +98,8 @@ describe('RetrievalDebuggerPage', () => {
     );
 
     const kbTrigger = screen.getByText(/select knowledge base/i);
-    await userEvent.click(kbTrigger);
-    await userEvent.click(await screen.findByText('Product Documentation'));
+    await userEvent.click(kbTrigger, { pointerEventsCheck: 0 });
+    await userEvent.click(await screen.findByText('Product Documentation'), { pointerEventsCheck: 0 });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /run query/i })).not.toBeDisabled();

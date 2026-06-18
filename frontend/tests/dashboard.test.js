@@ -104,7 +104,9 @@ describe('DashboardPage', () => {
     });
 
     render(<DashboardPage />);
-    expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByTestId('skeleton-card').length + screen.queryAllByTestId('skeleton-text').length
+    ).toBeGreaterThan(0);
   });
 
   it('renders recent activity items', () => {
@@ -122,6 +124,6 @@ describe('DashboardPage', () => {
     });
 
     render(<DashboardPage />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeInTheDocument();
   });
 });
