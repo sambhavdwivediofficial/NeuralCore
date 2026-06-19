@@ -504,6 +504,29 @@ class EmbeddingSettings(BaseModel):
     quality_validation: EmbeddingQualitySettings = Field(default_factory=EmbeddingQualitySettings)
 
 
+class PaymentProviderConfig(BaseModel):
+    enabled: bool = False
+    api_key: Optional[SecretStr] = None
+    api_secret: Optional[SecretStr] = None
+    webhook_secret: Optional[SecretStr] = None
+    sandbox_mode: bool = True
+
+
+class BillingSettings(BaseModel):
+    default_currency: str = "USD"
+    trial_days: int = 14
+    invoice_due_days: int = 7
+    tax_inclusive_pricing: bool = False
+    providers: dict[str, PaymentProviderConfig] = Field(
+        default_factory=lambda: {
+            "stripe": PaymentProviderConfig(),
+            "razorpay": PaymentProviderConfig(),
+            "paypal": PaymentProviderConfig(),
+        }
+    )
+    default_provider: str = "razorpay"
+
+
 class VectorSearchSettings(BaseModel):
     default_top_k: int = 10
     max_top_k: int = 100
@@ -826,6 +849,7 @@ class Settings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     monitoring: MonitoringSettings = Field(default_factory=MonitoringSettings)
     model_gateway: ModelGatewaySettings = Field(default_factory=ModelGatewaySettings)
+    billing: BillingSettings = Field(default_factory=BillingSettings)
 
     @property
     def is_production(self) -> bool:
