@@ -82,7 +82,11 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Architecture: ARCHITECTURE.md
+  - Overview:
+      - ARCHITECTURE: ARCHITECTURE.md
+      - ROADMAP: ROADMAP.md
+      - CHANGELOG: CHANGELOG.md
+      - CONTRIBUTING: CONTRIBUTING.md
   - API: api.md
   - Ingestion: ingestion.md
   - Retrieval: retrieval.md

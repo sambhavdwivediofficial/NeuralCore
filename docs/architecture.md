@@ -996,7 +996,7 @@ Document artifacts and model checkpoints are stored in S3-compatible object stor
 
 ## Security Architecture
 
-Full security documentation is in [SECURITY.md](SECURITY.md). Summary:
+Full security documentation is in [SECURITY.md](security.md). Summary:
 
 - All external communication over TLS 1.3
 - Tenant data isolated at every layer of the stack

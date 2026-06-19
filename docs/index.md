@@ -365,16 +365,16 @@ NeuralCore is designed to serve a broad range of deployment scenarios:
 
 Full documentation covers every subsystem in depth:
 
-- [Architecture Overview](docs/architecture.md)
-- [API Reference](docs/api.md)
-- [Ingestion Guide](docs/ingestion.md)
-- [Retrieval Guide](docs/retrieval.md)
-- [Agent System](docs/agents.md)
-- [Memory Architecture](docs/memory.md)
-- [Embedding Configuration](docs/embeddings.md)
-- [SDK Reference](docs/sdk.md)
-- [Security Model](docs/security.md)
-- [Deployment Guide](docs/deployment.md)
+- [Architecture Overview](ARCHITECTURE.md)
+- [API Reference](api.md)
+- [Ingestion Guide](ingestion.md)
+- [Retrieval Guide](retrieval.md)
+- [Agent System](agents.md)
+- [Memory Architecture](memory.md)
+- [Embedding Configuration](embeddings.md)
+- [SDK Reference](sdk.md)
+- [Security Model](security.md)
+- [Deployment Guide](deployment.md)
 
 ---
 

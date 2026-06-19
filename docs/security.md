@@ -25,7 +25,6 @@ NeuralCore is a production-grade AI infrastructure platform designed for enterpr
   - [Infrastructure Security](#infrastructure-security)
 - [Security Configuration for Production Operators](#security-configuration-for-production-operators)
 - [Known Limitations and Accepted Risks](#known-limitations-and-accepted-risks)
-- [Security Changelog](#security-changelog)
 
 ---
 
