@@ -230,7 +230,7 @@ class JWTSettings(BaseModel):
     public_key: Optional[SecretStr] = None
     private_key_path: Optional[Path] = None
     public_key_path: Optional[Path] = None
-    access_token_expire_minutes: int = 15
+    access_token_expire_minutes: int = 1440  #15
     refresh_token_expire_days: int = 30
     issuer: str = "neuralcore"
     audience: str = "neuralcore-api"
@@ -754,18 +754,18 @@ class ModelGatewaySettings(BaseModel):
     providers: dict[str, ModelProviderConfig] = Field(
         default_factory=lambda: {
             "local": ModelProviderConfig(
-                base_url="http://model-runtime:8080/v1",
-                default_model="neuralcore-48b",
+                base_url="http://localhost:11434",
+                default_model="Roxan",
                 context_window=32768,
                 timeout_seconds=180.0,
-                enabled=False,
+                enabled=True,
             ),
             "ollama": ModelProviderConfig(
                 base_url="http://localhost:11434",
                 default_model="Roxan",
-                context_window=8192,
-                enabled=True,
+                context_window=32768,
                 timeout_seconds=180.0,
+                enabled=True,
             ),
             "openai": ModelProviderConfig(
                 default_model="gpt-4o",
@@ -794,10 +794,11 @@ class ModelGatewaySettings(BaseModel):
                 enabled=False,
             ),
             "llama": ModelProviderConfig(
-                base_url="http://llama-runtime:8080/v1",
-                default_model="llama-3.1-70b",
-                context_window=128000,
-                enabled=False,
+                base_url="http://localhost:11434",
+                default_model="qwen3-coder:30b",
+                context_window=32768,
+                timeout_seconds=180.0,
+                enabled=True,
             ),
         }
     )

@@ -25,6 +25,8 @@ python-multipart==0.0.20
 email-validator==2.2.0
 optimum[onnxruntime]==2.1.0
 motor==3.7.0
+bcrypt==4.0.1
+passlib==1.7.4
 asyncmy==0.2.10
 youtube-transcript-api==0.6.3
 duckduckgo-search==8.1.1

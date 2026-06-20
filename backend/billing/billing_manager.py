@@ -11,6 +11,7 @@ from billing.usage_metering import UsageMeter
 from monitoring.logging import get_logger
 from multitenancy.organizations.organization import OrganizationPlan
 from settings import Settings
+from settings import Role
 
 logger = get_logger("neuralcore.billing.manager")
 
@@ -26,6 +27,9 @@ class BillingManager:
         self.invoice_generator = InvoiceGenerator(settings)
         self.usage_meter = usage_meter
 
+    def is_billing_exempt(self, user_role: Role) -> bool:
+        return user_role == Role.SUPER_ADMIN
+
     async def start_subscription(
         self,
         organization_id: uuid.UUID,
@@ -34,7 +38,12 @@ class BillingManager:
         provider: str | None = None,
         payment_method_token: str | None = None,
         customer_email: str | None = None,
+        user_role: Any = None,
     ) -> Subscription:
+        if user_role is not None and self.is_billing_exempt(user_role):
+            logger.info("billing_exempt_owner_subscription", organization_id=str(organization_id))
+            return self.subscription_manager.create_trial_subscription(organization_id, OrganizationPlan.ENTERPRISE)
+
         if plan == OrganizationPlan.FREE:
             return self.subscription_manager.create_trial_subscription(organization_id, plan)
 
@@ -63,7 +72,10 @@ class BillingManager:
     async def cancel_subscription(self, subscription: Subscription, immediate: bool = False) -> Subscription:
         return await self.subscription_manager.cancel_subscription(subscription, immediate)
 
-    async def generate_monthly_invoice(self, organization_id: uuid.UUID, subscription: Subscription) -> Invoice:
+    async def generate_monthly_invoice(self, organization_id: uuid.UUID, subscription: Subscription, user_role: Any = None) -> Invoice | None:
+        if user_role is not None and self.is_billing_exempt(user_role):
+            logger.info("billing_exempt_invoice_skipped", organization_id=str(organization_id))
+            return None
         usage_summary = await self.usage_meter.get_billing_period_usage(organization_id)
         plan_limits = get_plan_limits(subscription.plan).model_dump()
         return self.invoice_generator.generate_usage_invoice(subscription, usage_summary, plan_limits)

@@ -1,164 +1,370 @@
 <mxfile host="65bd71144e">
-    <diagram name="System Overview" id="system-overview-001">
-        <mxGraphModel dx="1177" dy="611" grid="1" gridSize="4" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1650" pageHeight="1275" background="#000000" math="0" shadow="0">
+    <diagram name="System Overview — Full Architecture" id="system-overview-002">
+        <mxGraphModel dx="1726" dy="873" grid="1" gridSize="4" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2200" pageHeight="2800" background="#000000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="NeuralCore — System Architecture Overview" style="text;html=1;strokeColor=none;fillColor=white;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
-                    <mxGeometry x="520" y="20" width="600" height="40" as="geometry"/>
+                <mxCell id="title" value="NeuralCore — Full System Architecture" style="text;html=1;strokeColor=none;fillColor=white;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="10" width="640" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_client" value="Client Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="80" width="1570" height="120" as="geometry"/>
+                <mxCell id="subtitle" value="Production multi-tenant deployment topology — every service, data store, and trust boundary shown" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="50" width="840" height="24" as="geometry"/>
                 </mxCell>
-                <mxCell id="client_web" value="Web App&#xa;(Next.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="125" width="160" height="55" as="geometry"/>
+                <mxCell id="zone_internet" value="UNTRUSTED ZONE — Public Internet" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff5f5;strokeColor=#cc0000;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="100" width="2120" height="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="client_mobile" value="Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="280" y="125" width="160" height="55" as="geometry"/>
+                <mxCell id="client_web" value="Web App&#xa;(Next.js, Vercel/CDN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="client_sdk" value="Python / TS SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="480" y="125" width="160" height="55" as="geometry"/>
+                <mxCell id="client_mobile_ios" value="iOS App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="150" width="140" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="client_cli" value="CLI Tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="680" y="125" width="160" height="55" as="geometry"/>
+                <mxCell id="client_mobile_android" value="Android App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="150" width="140" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="client_3rdparty" value="3rd-Party Integrations&#xa;(Webhooks, Connectors)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="880" y="125" width="200" height="55" as="geometry"/>
+                <mxCell id="client_python_sdk" value="Python SDK&#xa;(customer service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_edge" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=8;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="240" width="1570" height="90" as="geometry"/>
+                <mxCell id="client_ts_sdk" value="TypeScript SDK&#xa;(customer service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_lb" value="Load Balancer / Reverse Proxy (Nginx / Caddy)  —  TLS Termination" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=13;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="265" width="500" height="45" as="geometry"/>
+                <mxCell id="client_cli" value="CLI Tool&#xa;(developer machine)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_auth" value="Auth Middleware&#xa;(JWT Verify, Rate Limit, CORS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="660" y="265" width="280" height="45" as="geometry"/>
+                <mxCell id="client_webhook_consumer" value="Customer Webhook&#xa;Receiver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_proxy" value="Egress Proxy&#xa;(Tool Call Allowlisting)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="980" y="265" width="280" height="45" as="geometry"/>
+                <mxCell id="client_vscode" value="VS Code Extension&#xa;(code assistant)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_app" value="Application Layer (FastAPI — Stateless, Horizontally Scaled)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="360" width="1570" height="210" as="geometry"/>
+                <mxCell id="client_3rdparty" value="3rd-Party SaaS&#xa;(Slack app, Zendesk app)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1540" y="150" width="200" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_agents" value="Agents API&#xa;/api/v1/agents" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="400" width="170" height="60" as="geometry"/>
+                <mxCell id="dns" value="DNS&#xa;(Route53 / Cloudflare)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1820" y="150" width="170" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_kb" value="Knowledge Base API&#xa;/api/v1/knowledge-bases" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="280" y="400" width="190" height="60" as="geometry"/>
+                <mxCell id="cdn" value="CDN / WAF&#xa;(CloudFront + Shield)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="2000" y="150" width="140" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_retrieval" value="Retrieval API&#xa;/api/v1/retrieve" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="500" y="400" width="170" height="60" as="geometry"/>
+                <mxCell id="zone_edge" value="DMZ / EDGE ZONE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#e65100;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="320" width="2120" height="260" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_embed" value="Embeddings API&#xa;/api/v1/embeddings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="700" y="400" width="170" height="60" as="geometry"/>
+                <mxCell id="edge_lb" value="Load Balancer&#xa;(AWS ALB / GCP LB)&#xa;Layer-7, health-checked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="365" width="320" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_projects" value="Projects / Teams API&#xa;/api/v1/projects" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="900" y="400" width="180" height="60" as="geometry"/>
+                <mxCell id="edge_tls" value="TLS Termination&#xa;(cert-manager, Let&#39;s Encrypt&#xa;auto-renewal, TLS 1.2/1.3 only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_auth" value="Auth API&#xa;/api/v1/auth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="1110" y="400" width="150" height="60" as="geometry"/>
+                <mxCell id="edge_waf" value="WAF Rules&#xa;(SQLi, XSS, rate-based&#xa;blocking, OWASP CRS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_monitor" value="Monitoring / Analytics API&#xa;/api/v1/analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="1290" y="400" width="190" height="60" as="geometry"/>
+                <mxCell id="edge_ratelimit" value="Global Rate Limiter&#xa;(per-IP, per-API-key,&#xa;sliding window, Redis-backed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="app_engine" value="Agent Execution Engine  (ReAct Loop · Tool Dispatch · Memory Injection · Guardrails · Streaming)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="480" width="1400" height="60" as="geometry"/>
+                <mxCell id="edge_authmw" value="Auth Middleware&#xa;(JWT signature verify,&#xa;cookie/header extraction)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_worker" value="Async Worker Layer (Celery)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="600" width="1570" height="100" as="geometry"/>
+                <mxCell id="edge_cors" value="CORS Policy Enforcement&#xa;(per-project allowed&#xa;origins list)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="worker_ingestion" value="Ingestion Workers&#xa;(parse · chunk · embed · index)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="100" y="640" width="240" height="50" as="geometry"/>
+                <mxCell id="edge_idempotency" value="Idempotency Key Cache&#xa;(dedupe retried mutations,&#xa;Redis, 24h TTL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1380" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="worker_memory" value="Memory Workers&#xa;(summarize · extract facts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="380" y="640" width="240" height="50" as="geometry"/>
+                <mxCell id="edge_proxy_egress" value="Egress Proxy&#xa;(allowlist enforcement for&#xa;agent tool HTTP calls)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1640" y="455" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="worker_finetune" value="Fine-Tuning Workers&#xa;(embedding model training)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="660" y="640" width="240" height="50" as="geometry"/>
+                <mxCell id="edge_requestid" value="Request ID Injection&#xa;(X-Request-ID propagation&#xa;for distributed tracing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1900" y="455" width="220" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="worker_webhook" value="Webhook Dispatch Workers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="940" y="640" width="240" height="50" as="geometry"/>
+                <mxCell id="zone_app" value="PRIVATE SUBNET — Application Tier (stateless, autoscaled)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="600" width="2120" height="520" as="geometry"/>
                 </mxCell>
-                <mxCell id="worker_sync" value="Connector Sync Workers&#xa;(Confluence · Notion · Drive · GitHub)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="1220" y="640" width="280" height="50" as="geometry"/>
+                <mxCell id="api_replicas_box" value="FastAPI Service — N replicas (HPA: 3–20, target 70% CPU)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="645" width="2040" height="140" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_data" value="Data Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="730" width="1570" height="140" as="geometry"/>
+                <mxCell id="api_router" value="Route Layer&#xa;(FastAPI routers, Pydantic&#xa;request/response validation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="690" width="240" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_postgres" value="PostgreSQL&#xa;Primary + 2 Read Replicas&#xa;(metadata, RLS multi-tenant)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="775" width="220" height="70" as="geometry"/>
+                <mxCell id="api_authz" value="Authorization Layer&#xa;(RBAC: viewer/developer/&#xa;admin/owner, project scoping)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="690" width="240" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_redis" value="Redis&#xa;Sentinel Cluster&#xa;(cache, sessions, queue, episodic memory)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="340" y="775" width="220" height="70" as="geometry"/>
+                <mxCell id="api_agents_svc" value="Agents Service&#xa;CRUD + run orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_qdrant" value="Qdrant&#xa;3-Node Cluster&#xa;(vector embeddings, semantic memory)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="600" y="775" width="220" height="70" as="geometry"/>
+                <mxCell id="api_kb_svc" value="Knowledge Base Service&#xa;CRUD + retrieval orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="870" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_s3" value="Object Storage&#xa;(S3 / GCS)&#xa;raw documents, exports, snapshots" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="860" y="775" width="220" height="70" as="geometry"/>
+                <mxCell id="api_embed_svc" value="Embeddings Service&#xa;batch + cache orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_vault" value="Secret Store&#xa;(HashiCorp Vault)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="1120" y="775" width="220" height="70" as="geometry"/>
+                <mxCell id="api_proj_svc" value="Projects/Teams Service&#xa;tenancy + billing hooks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="data_pgvector" value="pgvector&#xa;(optional metadata-filtered&#xa;vector search)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;dashed=1;" parent="1" vertex="1">
-                    <mxGeometry x="1380" y="775" width="200" height="70" as="geometry"/>
+                <mxCell id="api_monitor_svc" value="Analytics Service&#xa;aggregation queries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1590" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_external" value="External Providers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="10" y="900" width="760" height="100" as="geometry"/>
+                <mxCell id="api_webhook_svc" value="Webhooks Service&#xa;subscription mgmt + signing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1830" y="690" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="ext_openai" value="OpenAI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="940" width="140" height="40" as="geometry"/>
+                <mxCell id="exec_engine_box" value="Agent Execution Engine (in-process, per-request lifecycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="805" width="2040" height="140" as="geometry"/>
                 </mxCell>
-                <mxCell id="ext_anthropic" value="Anthropic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="940" width="140" height="40" as="geometry"/>
+                <mxCell id="exec_react" value="ReAct Loop Controller&#xa;(per agent type: react/rag/&#xa;plan_execute/supervisor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="850" width="240" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="ext_cohere" value="Cohere" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="400" y="940" width="140" height="40" as="geometry"/>
+                <mxCell id="exec_llmrouter" value="LLM Router&#xa;(provider selection,&#xa;fallback chains, retries)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="850" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="ext_other" value="Other LLM / Tool Providers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="560" y="940" width="200" height="40" as="geometry"/>
+                <mxCell id="exec_tooldispatch" value="Tool Dispatcher&#xa;(schema validate, perms,&#xa;rate limit, execute)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="610" y="850" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="layer_obs" value="Observability Stack" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontSize=14;fontStyle=1;arcSize=4;" parent="1" vertex="1">
-                    <mxGeometry x="850" y="900" width="760" height="100" as="geometry"/>
+                <mxCell id="exec_memoryinject" value="Memory Injector&#xa;(4-layer assembly,&#xa;token budgeting)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="850" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="obs_prom" value="Prometheus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="890" y="940" width="150" height="40" as="geometry"/>
+                <mxCell id="exec_guardrails" value="Guardrails Engine&#xa;(cost/token/time limits,&#xa;PII, content filters)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1090" y="850" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="obs_grafana" value="Grafana" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="1070" y="940" width="150" height="40" as="geometry"/>
+                <mxCell id="exec_sse" value="SSE Stream Manager&#xa;(event emission,&#xa;reconnect via Last-Event-ID)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1330" y="850" width="220" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="obs_loki" value="Loki (logs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="1250" y="940" width="150" height="40" as="geometry"/>
+                <mxCell id="exec_retrieval_engine" value="Retrieval Engine&#xa;(hybrid search, rerank,&#xa;compression — see retrieval_flow.drawio)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1570" y="850" width="260" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="obs_otel" value="OpenTelemetry Traces" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="1430" y="940" width="150" height="40" as="geometry"/>
+                <mxCell id="exec_telemetry" value="Telemetry Emitter&#xa;(OTel spans, Prometheus&#xa;counters/histograms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f57f17;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1850" y="850" width="200" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="layer_client" target="layer_edge" edge="1">
+                <mxCell id="runtime_box" value="Pod / Container Runtime" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#616161;fontSize=11;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="965" width="2040" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_asgi" value="Uvicorn ASGI workers&#xa;(N=4-8 per pod, async event loop)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="1000" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_health" value="Liveness / Readiness Probes&#xa;(/health endpoint, 5s interval)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="1000" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_pdb" value="Pod Disruption Budget&#xa;(minAvailable: 2, zero-downtime deploys)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="1000" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_antiaffinity" value="Pod Anti-Affinity&#xa;(spread across nodes/AZs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1140" y="1000" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_secrets" value="Mounted Secrets&#xa;(Vault Agent sidecar injection)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1480" y="1000" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="runtime_resources" value="Resource Limits&#xa;(req: 500m/1Gi, lim: 2000m/4Gi)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#616161;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1820" y="1000" width="260" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="zone_worker" value="PRIVATE SUBNET — Async Worker Tier (Celery, event-driven autoscaling via KEDA)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1150" width="2120" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_celery_beat" value="Celery Beat&#xa;(scheduler — refresh jobs,&#xa;cron-based syncs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1200" width="240" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_ingestion" value="Queue: ingestion&#xa;(8–16 workers, concurrency=8)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_memory" value="Queue: memory&#xa;(summarize, extract facts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="660" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_embed" value="Queue: embeddings_async&#xa;(batch jobs, up to 1M items)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_finetune" value="Queue: finetune&#xa;(GPU-backed, long-running)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1260" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_webhook" value="Queue: webhook_dispatch&#xa;(HMAC sign, retry w/ backoff)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1560" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_q_connector" value="Queue: connector_sync&#xa;(Confluence/Notion/Drive/GitHub)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1860" y="1200" width="260" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_pipeline" value="Per-Task Pipeline: download to parse to clean to chunk to enrich to dedup to embed to index to status update  (full detail in ingestion_flow.drawio)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6a1b9a;fontSize=11;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="1290" width="1760" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_dlq" value="Dead Letter Queue&#xa;(failed after max retries,&#xa;manual review / replay)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#b71c1c;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1290" width="240" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="worker_keda" value="KEDA Scaler&#xa;(2–20 replicas based on Redis queue depth)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1370" width="2000" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="zone_data" value="PRIVATE SUBNET — Data Tier (no direct internet access, accessed only from App/Worker tiers)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#0d47a1;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1460" width="2120" height="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_box" value="PostgreSQL 15 Cluster" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#0d47a1;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1505" width="540" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_primary" value="Primary&#xa;(writes, WAL streaming)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="1550" width="160" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_replica1" value="Read Replica 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="1550" width="150" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_replica2" value="Read Replica 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="1550" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_pgbouncer" value="PgBouncer&#xa;(connection pooling, transaction mode)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="1615" width="490" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="pg_rls" value="Row-Level Security (tenant_id isolation) on: agents, knowledge_bases, documents, runs, memory, api_keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=9;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="1670" width="490" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_box" value="Redis Sentinel Cluster" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#0d47a1;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="1505" width="420" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_master" value="Master" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="1550" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_replica" value="2× Replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="1550" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_sentinel" value="3× Sentinels&#xa;(failover)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="1550" width="90" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_uses" value="Used for: Celery broker · session cache · episodic memory · semantic cache · rate limiting · idempotency keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=9;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="1615" width="370" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis_persist" value="AOF persistence enabled; maxmemory-policy: allkeys-lru" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=9;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="1670" width="370" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_box" value="Qdrant Vector Database Cluster" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#0d47a1;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="1505" width="500" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_n1" value="Node 1&#xa;(shard + replica)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="1550" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_n2" value="Node 2&#xa;(shard + replica)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1300" y="1550" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_n3" value="Node 3&#xa;(shard + replica)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1470" y="1550" width="120" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_features" value="Collections: 1 per KB; HNSW index (m=16); int8 quantization; replication_factor=2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=9;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="1615" width="460" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="qdrant_uses" value="Used for: document embeddings; semantic memory vectors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=9;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="1670" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3_box" value="Object Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#0d47a1;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1630" y="1505" width="260" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3_raw" value="Raw uploaded documents&#xa;(pre-parsing originals)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1660" y="1550" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3_backup" value="DB backups + Qdrant snapshots" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1660" y="1610" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3_export" value="GDPR exports&#xa;(time-limited URLs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1660" y="1670" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="vault_box" value="HashiCorp Vault" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#0d47a1;fontSize=12;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1910" y="1505" width="250" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="vault_secrets" value="API keys; JWT signing keys&#xa;DB passwords; LLM provider keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1940" y="1550" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="vault_approle" value="AppRole auth&#xa;(short-lived tokens, 1h TTL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1940" y="1620" width="190" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="pgvector_box" value="pgvector  (optional alt. vector backend, metadata-filtered search)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d47a1;fontSize=10;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1740" width="2080" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="zone_external" value="EXTERNAL — Third-Party Providers (egress-proxy controlled)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#424242;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1920" width="1020" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_openai" value="OpenAI&#xa;(GPT-4o, embeddings)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1970" width="180" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_anthropic" value="Anthropic&#xa;(Claude models)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="1970" width="180" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_cohere" value="Cohere&#xa;(embed, rerank)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="1970" width="180" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_connectors" value="Confluence / Notion / Drive&#xa;GitHub / Zendesk / Slack" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="1970" width="280" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_idp" value="Identity Provider&#xa;(Okta / Azure AD / Google — SAML/OIDC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="2040" width="280" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_payments" value="Stripe&#xa;(billing, metered usage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="2040" width="220" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_email" value="Transactional Email&#xa;(SES / SendGrid)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="2040" width="220" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext_customer_apis" value="Customer-Owned APIs&#xa;(custom tool webhooks, CRMs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="2040" width="180" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="zone_obs" value="OBSERVABILITY STACK" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#424242;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=15;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="1920" width="1060" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_prom" value="Prometheus&#xa;(metrics scrape, 15s interval,&#xa;30d retention)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1140" y="1970" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_grafana" value="Grafana&#xa;(6+ dashboards: overview,&#xa;agents, LLM usage, infra, db, queues)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1380" y="1970" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_loki" value="Loki&#xa;(structured JSON logs,&#xa;label-indexed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1620" y="1970" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_otel" value="OpenTelemetry Collector&#xa;(traces → Jaeger/Tempo)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1860" y="1970" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_pg_exp" value="postgres-exporter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1140" y="2045" width="180" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_redis_exp" value="redis-exporter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="2045" width="180" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_alertmanager" value="Alertmanager&#xa;(PagerDuty / Slack routing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1540" y="2045" width="240" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs_uptime" value="Uptime / Synthetic Checks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#424242;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1800" y="2045" width="280" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="tenancy_note" value="Multi-Tenancy Model: every request resolves tenant_id from the JWT/API key, propagated as a connection-scoped PostgreSQL session variable (app.current_tenant_id), enforced by Row-Level Security on every table. Qdrant collections are additionally namespaced per knowledge_base_id which is itself tenant-scoped at creation time. Cross-tenant data access is architecturally prevented, not just access-controlled." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=11;fontStyle=2;align=left;spacingLeft=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="2160" width="2120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#cc0000;strokeWidth=2;" parent="1" source="zone_internet" target="zone_edge" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="layer_edge" target="layer_app" edge="1">
+                <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#e65100;strokeWidth=2;" parent="1" source="zone_edge" target="zone_app" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="layer_app" target="layer_worker" edge="1">
+                <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.3;exitY=1;entryX=0.3;entryY=0;strokeColor=#2e7d32;strokeWidth=2;" parent="1" source="zone_app" target="zone_worker" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="layer_worker" target="layer_data" edge="1">
+                <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#6a1b9a;strokeWidth=2;" parent="1" source="zone_worker" target="zone_data" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;dashed=1;" parent="1" source="app_engine" target="ext_openai" edge="1">
+                <mxCell id="f5" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.7;exitY=1;entryX=0.7;entryY=0;strokeColor=#0d47a1;strokeWidth=2;" parent="1" source="zone_app" target="zone_data" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1700" y="1140"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f6" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.2;exitY=1;entryX=0.2;entryY=0;strokeColor=#424242;dashed=1;" parent="1" source="zone_data" target="zone_external" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;dashed=1;" parent="1" source="app_engine" target="ext_anthropic" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="f7" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#999999;dashed=1;" parent="1" source="zone_app" target="zone_obs" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2160" y="860"/>
+                            <mxPoint x="2160" y="1990"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;dashed=1;" parent="1" source="app_engine" target="ext_cohere" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="f8" value="all LLM/embedding calls routed through" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;strokeColor=#e65100;dashed=1;fontSize=9;" parent="1" source="edge_proxy_egress" target="ext_openai" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2050" y="520"/>
+                            <mxPoint x="2050" y="1940"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#999999;dashed=1;" parent="1" source="layer_app" target="layer_obs" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="legend" value="Solid arrows = request flow  ·  Dashed arrows = external / observability calls" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#666666;fontStyle=2;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="1020" width="700" height="20" as="geometry"/>
+                <mxCell id="legend_final" value="Red = untrusted   Orange = edge/security   Green = stateless app tier   Purple = async workers   Blue = persistent data   Grey = external/observability" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#666666;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="2255" width="1400" height="20" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

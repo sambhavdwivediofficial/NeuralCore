@@ -8,11 +8,15 @@ from passlib.context import CryptContext
 from auth.validators import ValidationError
 from settings import Settings
 
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    bcrypt__rounds=12,
+    deprecated="auto",
+)
 
 
 def hash_password(password: str, settings: Settings) -> str:
-    return _pwd_context.using(rounds=settings.auth.password_policy.bcrypt_rounds).hash(password)
+    return _pwd_context.hash(password)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
@@ -20,7 +24,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def needs_rehash(hashed_password: str, settings: Settings) -> bool:
-    return _pwd_context.using(rounds=settings.auth.password_policy.bcrypt_rounds).needs_update(hashed_password)
+    return _pwd_context.needs_update(hashed_password)
 
 
 def validate_password_strength(password: str, settings: Settings) -> None:

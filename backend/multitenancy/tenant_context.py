@@ -50,8 +50,9 @@ class TenantContext:
         role: Role,
         settings: dict | None = None,
         limit_overrides: dict | None = None,
+        is_owner_account: bool = False,
     ) -> "TenantContext":
-        base_limits = get_limits_for_plan(plan)
+        base_limits = get_limits_for_plan(plan, is_owner_account=is_owner_account)
         limits = merge_overrides(base_limits, limit_overrides or {})
         return cls(
             organization_id=organization_id,

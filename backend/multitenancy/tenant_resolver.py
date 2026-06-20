@@ -61,6 +61,7 @@ async def resolve_tenant_context(request: Request, user: User, db: AsyncSession)
         role=role,
         settings=organization.settings,
         limit_overrides=organization.limit_overrides,
+        is_owner_account=(role == Role.SUPER_ADMIN),
     )
 
 

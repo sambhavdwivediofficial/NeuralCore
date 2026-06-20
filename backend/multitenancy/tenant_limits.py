@@ -43,8 +43,16 @@ PLAN_LIMITS: dict[OrganizationPlan, TenantLimits] = {
     ),
 }
 
+OWNER_UNLIMITED_LIMITS = TenantLimits(
+    max_projects=999999, max_agents=999999, max_knowledge_bases=999999, max_datasets=999999,
+    max_workflows=999999, max_members=999999, max_api_keys=999999, max_storage_gb=999999,
+    max_monthly_tokens=999999999999, max_monthly_requests=999999999999, max_concurrent_agent_runs=999999,
+)
 
-def get_limits_for_plan(plan: OrganizationPlan) -> TenantLimits:
+
+def get_limits_for_plan(plan: OrganizationPlan, is_owner_account: bool = False) -> TenantLimits:
+    if is_owner_account:
+        return OWNER_UNLIMITED_LIMITS
     return PLAN_LIMITS.get(plan, PLAN_LIMITS[OrganizationPlan.FREE])
 
 

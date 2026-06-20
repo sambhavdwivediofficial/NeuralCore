@@ -105,7 +105,26 @@ def create_app() -> FastAPI:
 
     if settings.monitoring.otlp.enabled:
         FastAPIInstrumentor.instrument_app(app)
+    
+    @app.get("/", include_in_schema=False)
+    async def root(request: Request) -> ORJSONResponse:
+        from datetime import datetime, timezone
 
+        uptime = time.time() - request.app.state.start_time
+        return ORJSONResponse(
+            content={
+                "name": settings.project_name,
+                "status": "running",
+                "version": settings.version,
+                "environment": settings.environment.value,
+                "uptime_seconds": round(uptime, 1),
+                "docs": f"{settings.api_prefix}/docs" if not settings.is_production else None,
+                "health": settings.app.health_check.path,
+                "api": settings.api_prefix,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+    
     @app.get(settings.app.health_check.live_path, include_in_schema=False)
     async def liveness() -> dict[str, str]:
         return {"status": "alive"}
