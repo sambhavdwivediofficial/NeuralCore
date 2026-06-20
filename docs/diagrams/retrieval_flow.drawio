@@ -1,0 +1,517 @@
+<mxfile host="65bd71144e">
+    <diagram name="Retrieval Flow — Full Pipeline" id="retrieval-flow-001">
+        <mxGraphModel dx="1681" dy="873" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1900" pageHeight="2600" background="#000000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="NeuralCore Retrieval Pipeline — Full Detail (Query → Ranked, Compressed, Cited Results)" style="text;html=1;strokeColor=none;fillColor=white;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="10" width="1040" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Every box below is a real pipeline stage executed in production. Dashed boxes are optional / configurable stages." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="50" width="1040" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="entry" value="Incoming Query&#xa;(from API, SDK, or Agent ReAct loop)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="95" width="280" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="cache_check" value="Exact-Match Cache Lookup&#xa;(Redis — query hash)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="195" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="cache_decision" value="Cache hit?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="275" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cache_return" value="Return cached results&#xa;(latency: ~2ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="280" width="240" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="section1" value="STAGE 1 — Query Preprocessing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="370" width="1800" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_normalize" value="Normalize&#xa;lowercase · trim · unicode&#xa;normalize · strip control chars" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_lang" value="Language Detection&#xa;(fastText / langdetect)&#xa;confidence threshold check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_translate" value="Query Translation&#xa;(optional — multilingual KB)&#xa;target_language config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_intent" value="Intent Classification&#xa;(factual / navigational /&#xa;comparative / procedural)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_expand" value="Query Expansion&#xa;(optional — LLM synonym&#xa;generation, max_terms=5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_decompose" value="Query Decomposition&#xa;(optional — multi-hop&#xa;sub-query generation, max=4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1420" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_hyde" value="HyDE Generation&#xa;(optional — generate&#xa;hypothetical answer doc, embed that instead)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="420" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="q_final" value="Final Query Set Assembled&#xa;(1 original query, or N sub-queries if decomposed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="540" width="700" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="section2" value="STAGE 2 — Dual-Path Candidate Retrieval  (executed once per sub-query, fanned out in parallel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="680" width="1800" height="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="embed_query" value="Embed Query&#xa;(query embedding model —&#xa;may differ from doc embedding model)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="725" width="320" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_box" value="DENSE (Semantic) PATH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="820" width="700" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_qdrant" value="Qdrant ANN Search&#xa;HNSW index traversal&#xa;(ef=64–128, m=16)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="865" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_quant" value="Quantized Distance Calc&#xa;(int8 scalar quantization,&#xa;4× storage reduction)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="865" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_filter_pre" value="Pre-Filter Application&#xa;(metadata filter pushed into&#xa;ANN search if highly selective)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="945" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_topn" value="Top-N×2 candidates&#xa;(N = configured top_k,&#xa;over-fetch for fusion headroom)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="945" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dense_score" value="cosine_similarity ∈ [0,1]&#xa;ranked descending" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="335" y="1025" width="240" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_box" value="SPARSE (Keyword / BM25) PATH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=13;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="940" y="820" width="700" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_tokenize" value="Tokenize &amp; Stem Query&#xa;(language-aware analyzer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="865" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_bm25" value="BM25 Scoring&#xa;(k1=1.5, b=0.75 — tunable)&#xa;against sparse vector index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="865" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_filter_pre" value="Pre-Filter Application&#xa;(same metadata filter,&#xa;applied to sparse index)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="945" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_topn" value="Top-N×2 candidates&#xa;(IDF-weighted term overlap)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="945" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sparse_score" value="bm25_score ∈ [0,∞)&#xa;ranked descending" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1115" y="1025" width="240" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="section3" value="STAGE 3 — Result Fusion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=15;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1140" width="1800" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="fusion_method" value="Fusion Method Selector" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="1185" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="fusion_rrf" value="Reciprocal Rank Fusion (RRF)&#xa;score = Σ 1/(k + rank_i), k=60 default&#xa;— rank-based, no score normalization needed —" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="1290" width="400" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="fusion_weighted" value="Weighted Score Fusion&#xa;score = α·norm(dense) + (1-α)·norm(sparse)&#xa;— requires min-max or z-score normalization —" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="1290" width="400" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="fusion_cascade" value="Cascade&#xa;search sparse only if dense&#xa;result count below threshold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e65100;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1280" y="1290" width="280" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="fusion_dedup" value="Deduplicate by chunk_id  →  merged, ranked candidate list (typically 30–60 chunks)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="1170" width="800" as="geometry">
+                        <mxRectangle x="540" y="1170" width="800" height="45" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="fusion_dedup2" value="Deduplicate by chunk_id  →  merged, ranked candidate list (typically 30–60 chunks)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="1265" as="geometry"/>
+                </mxCell>
+                <mxCell id="section4" value="STAGE 4 — Post-Filtering &amp; Multi-KB Merge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=15;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1390" width="1800" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="filter_post" value="Post-Filter Application&#xa;(applied here if filter is loose, &gt;50% match rate)&#xa;operators: eq · ne · in · nin · gt/gte · lt/lte · exists · regex" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="1435" width="420" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="filter_acl" value="Access Control Filter&#xa;(ACL: visibility · allowed_groups ·&#xa;allowed_users · denied_users)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="1435" width="340" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="multi_kb" value="Multi-KB Merge&#xa;(if retrieve_multi called)&#xa;union / interleave / weighted_rrf / cascade" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="1435" width="340" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="threshold_filter" value="Similarity Threshold Cutoff&#xa;(drop candidates below&#xa;min_similarity_score)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="1435" width="340" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="pre_rerank_pool" value="Pre-Rerank Candidate Pool  (typically top 20–40 chunks survive to this point)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="1545" width="800" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="section5" value="STAGE 5 — Cross-Encoder Reranking  (optional but strongly recommended in production)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#b71c1c;fontSize=15;fontStyle=1;verticalAlign=top;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1650" width="1800" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_pairs" value="Construct (query, document)&#xa;pairs for each candidate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="1700" width="280" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_model_choice" value="Reranker Model Choice" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="1690" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_minilm" value="cross-encoder/&#xa;ms-marco-MiniLM-L-12-v2&#xa;(fast, ~120ms, local GPU)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="1700" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_bge" value="BAAI/bge-reranker-large&#xa;(best open-source, ~250ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="1700" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_cohere" value="Cohere rerank-3 API&#xa;(multilingual, ~300ms,&#xa;network round-trip)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1240" y="1700" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_jina" value="jina-reranker-v2&#xa;(multilingual, ~180ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1480" y="1700" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_batch" value="Batched Forward Pass&#xa;(batch_size=32 default, GPU preferred)&#xa;query-document joint encoding (captures interaction, unlike bi-encoder)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="1820" width="700" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_cutoff" value="Apply min_rerank_score cutoff&#xa;→ truncate to top_k_after_rerank" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1300" y="1800" width="340" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rerank_skip" value="Reranking disabled&#xa;→ pass through pre-rerank order&#xa;(faster, lower precision)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b71c1c;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="1860" width="280" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="section6" value="STAGE 6 — Contextual Compression  (optional)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1c4e9;strokeColor=#512da8;fontSize=15;fontStyle=1;verticalAlign=top;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1960" width="1800" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="compress_method" value="Compression Method" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#512da8;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="1990" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="compress_llm" value="LLM-based Extraction&#xa;(gpt-4o-mini extracts only&#xa;query-relevant sentences)&#xa;Quality: excellent · Slow · Costly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#512da8;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="2030" width="320" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="compress_sentence" value="Sentence-Score Compression&#xa;(embed each sentence, keep&#xa;top-N by similarity to query)&#xa;Quality: good · Fast · Free" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#512da8;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="2030" width="320" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="compress_extractive" value="Extractive (TextRank-style)&#xa;graph-based sentence ranking,&#xa;no embedding calls&#xa;Quality: fair · Fastest · Free" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#512da8;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="2030" width="320" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="compress_none" value="Skip compression&#xa;(return full chunk text)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#512da8;fontSize=10;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="2030" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="section7" value="STAGE 7 — Result Assembly &amp; Response Construction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b3e5fc;strokeColor=#01579b;fontSize=15;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="2190" width="1800" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="assemble_meta" value="Attach Metadata&#xa;(document title, page number,&#xa;section heading, custom fields)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="140" y="2240" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="assemble_cite" value="Generate Citations&#xa;(ref number, source link,&#xa;text excerpt for inline display)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="2240" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="assemble_scores" value="Attach Score Breakdown&#xa;(dense_score, bm25_score,&#xa;hybrid_score, rerank_score)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="2240" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="assemble_trace" value="Build Trace Object&#xa;(per-stage latency, candidate&#xa;counts — for debug endpoint)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="2240" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="assemble_cachewrite" value="Write to Cache&#xa;(exact + semantic cache,&#xa;TTL per config)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="2240" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="telemetry_emit" value="Emit Telemetry → Prometheus (latency histograms, candidate counts) + OTel trace spans" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579b;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="2320" width="940" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="final_output" value="Final Response&#xa;{ results[], total_candidates, latency_ms, strategy_used }" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="2440" width="380" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="consumer_agent" value="Agent ReAct Loop&#xa;(injected as tool result)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="2550" width="260" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="consumer_api" value="Direct API Caller&#xa;(/retrieve endpoint response)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="2550" width="260" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="consumer_eval" value="Evaluation Harness&#xa;(precision/recall scoring)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="2550" width="260" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="consumer_debug" value="Retrieval Debugger UI&#xa;(full trace + score breakdown)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1280" y="2550" width="260" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="entry" target="cache_check" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="cache_check" target="cache_decision" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="yes" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#2e7d32;" parent="1" source="cache_decision" target="cache_return" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="no" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="cache_decision" target="section1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.15;entryY=0;strokeColor=#9673a6;" parent="1" source="q_normalize" target="q_final" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_normalize" target="q_lang" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_lang" target="q_translate" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_translate" target="q_intent" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_intent" target="q_expand" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_expand" target="q_decompose" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" parent="1" source="q_decompose" target="q_hyde" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.85;exitY=1;entryX=0.85;entryY=0;strokeColor=#9673a6;" parent="1" source="q_hyde" target="q_final" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="q_final" target="embed_query" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="990" y="660"/>
+                            <mxPoint x="630" y="660"/>
+                            <mxPoint x="630" y="725"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e14" value="fan out" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.25;exitY=1;entryX=0.5;entryY=0;strokeColor=#6c8ebf;" parent="1" source="embed_query" target="dense_box" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" value="fan out" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.75;exitY=1;entryX=0.5;entryY=0;strokeColor=#c2185b;" parent="1" source="embed_query" target="sparse_box" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#6c8ebf;" parent="1" source="dense_qdrant" target="dense_quant" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#6c8ebf;" parent="1" source="dense_qdrant" target="dense_filter_pre" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#6c8ebf;" parent="1" source="dense_quant" target="dense_topn" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;strokeColor=#6c8ebf;" parent="1" source="dense_filter_pre" target="dense_score" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;strokeColor=#6c8ebf;" parent="1" source="dense_topn" target="dense_score" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#c2185b;" parent="1" source="sparse_tokenize" target="sparse_bm25" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#c2185b;" parent="1" source="sparse_tokenize" target="sparse_filter_pre" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#c2185b;" parent="1" source="sparse_bm25" target="sparse_topn" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeColor=#c2185b;" parent="1" source="sparse_filter_pre" target="sparse_score" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeColor=#c2185b;" parent="1" source="sparse_topn" target="sparse_score" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.3;entryY=0;strokeColor=#333333;" parent="1" source="dense_score" target="fusion_method" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.7;entryY=0;strokeColor=#333333;" parent="1" source="sparse_score" target="fusion_method" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0;strokeColor=#e65100;" parent="1" source="fusion_method" target="fusion_rrf" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#e65100;" parent="1" source="fusion_method" target="fusion_weighted" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0;strokeColor=#e65100;" parent="1" source="fusion_method" target="fusion_cascade" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.3;entryY=0;strokeColor=#333333;" parent="1" source="fusion_rrf" target="fusion_dedup2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="fusion_weighted" target="fusion_dedup2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.7;entryY=0;strokeColor=#333333;" parent="1" source="fusion_cascade" target="fusion_dedup2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="fusion_dedup2" target="section4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e35" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#2e7d32;" parent="1" source="filter_post" target="filter_acl" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e36" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#2e7d32;" parent="1" source="filter_acl" target="multi_kb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e37" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#2e7d32;" parent="1" source="multi_kb" target="threshold_filter" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e38" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#2e7d32;" parent="1" source="threshold_filter" target="pre_rerank_pool" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e39" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="pre_rerank_pool" target="section5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e40" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_pairs" target="rerank_model_choice" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e41" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.3;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_model_choice" target="rerank_minilm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e42" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_model_choice" target="rerank_bge" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="1680"/>
+                            <mxPoint x="1000" y="1680"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e43" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.7;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_model_choice" target="rerank_cohere" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="654" y="1690"/>
+                            <mxPoint x="1230" y="1690"/>
+                            <mxPoint x="1230" y="1730"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e44" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.9;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_model_choice" target="rerank_jina" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="640" y="1770"/>
+                            <mxPoint x="1180" y="1770"/>
+                            <mxPoint x="1180" y="1680"/>
+                            <mxPoint x="1480" y="1680"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e45" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.2;entryY=0;strokeColor=#b71c1c;" parent="1" source="rerank_minilm" target="rerank_batch" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e46" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.4;entryY=0;strokeColor=#b71c1c;" parent="1" source="rerank_bge" target="rerank_batch" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1110" y="1780"/>
+                            <mxPoint x="820" y="1780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e47" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.6;entryY=0;strokeColor=#b71c1c;" parent="1" source="rerank_cohere" target="rerank_batch" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e48" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.8;entryY=0;strokeColor=#b71c1c;" parent="1" source="rerank_jina" target="rerank_batch" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e49" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#b71c1c;" parent="1" source="rerank_batch" target="rerank_cutoff" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e50" value="reranking.enabled = false" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;entryX=0;entryY=0.5;strokeColor=#b71c1c;dashed=1;" parent="1" source="rerank_skip" target="rerank_pairs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e51" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="section5" target="section6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e52" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.4;exitY=1;entryX=0.5;entryY=0;strokeColor=#512da8;" parent="1" source="compress_method" target="compress_llm" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="935" y="2120"/>
+                            <mxPoint x="690" y="2120"/>
+                            <mxPoint x="690" y="2020"/>
+                            <mxPoint x="360" y="2020"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e53" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#512da8;" parent="1" source="compress_method" target="compress_sentence" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e54" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.6;exitY=1;entryX=0.5;entryY=0;strokeColor=#512da8;" parent="1" source="compress_method" target="compress_extractive" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e55" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0;strokeColor=#512da8;dashed=1;" parent="1" source="compress_method" target="compress_none" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="976" y="2120"/>
+                            <mxPoint x="1250" y="2120"/>
+                            <mxPoint x="1250" y="2020"/>
+                            <mxPoint x="1540" y="2020"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e56" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="section6" target="section7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e57" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#01579b;" parent="1" source="assemble_meta" target="assemble_cite" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e58" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#01579b;" parent="1" source="assemble_cite" target="assemble_scores" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e59" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#01579b;" parent="1" source="assemble_scores" target="assemble_trace" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e60" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#01579b;" parent="1" source="assemble_trace" target="assemble_cachewrite" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e61" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#01579b;" parent="1" source="assemble_cite" target="telemetry_emit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e62" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#333333;" parent="1" source="telemetry_emit" target="final_output" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e63" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.2;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="final_output" target="consumer_agent" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e64" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.4;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="final_output" target="consumer_api" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e65" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.6;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="final_output" target="consumer_eval" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e66" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.8;exitY=1;entryX=0.5;entryY=0;strokeColor=#666666;" parent="1" source="final_output" target="consumer_debug" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_box" value="Legend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#999999;fontSize=13;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1480" y="95" width="400" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg1" value="Purple = query preprocessing" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="130" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg2" value="Blue = dense / semantic search path" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="155" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg3" value="Pink = sparse / keyword search path" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="180" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg4" value="Orange = fusion logic" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="205" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg5" value="Green = filtering / access control" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="230" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg6" value="Red = reranking" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="255" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg7" value="Light blue (sky) = result assembly / output" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="280" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg8" value="Dashed border = optional / configurable stage" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="305" width="360" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf_box" value="Typical End-to-End Latency Budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#999999;fontSize=13;fontStyle=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="95" width="700" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf1" value="Query preprocessing:        2–15ms  (more if expansion/HyDE enabled)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="130" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf2" value="Dense search (Qdrant):       15–40ms" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="155" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf3" value="Sparse search (BM25):         5–15ms" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="180" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf4" value="Fusion + filtering:                  1–5ms" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="205" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf5" value="Reranking (if enabled):     120–300ms  ← dominant cost" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#b71c1c;fontFamily=Courier New;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="230" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf6" value="Contextual compression:    0–200ms  (LLM method only)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="255" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf7" value="Result assembly:                  2–8ms" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#333333;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="280" width="660" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf8" value="TOTAL (hybrid + rerank):    ~150–400ms  |  TOTAL (cache hit): ~2ms" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#1a1a2e;fontFamily=Courier New;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="305" width="660" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

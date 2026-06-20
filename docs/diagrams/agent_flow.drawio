@@ -1,16 +1,16 @@
 <mxfile host="65bd71144e">
     <diagram name="Agent Execution Flow" id="agent-flow-001">
-        <mxGraphModel dx="912" dy="509" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="0" page="0" pageScale="1" pageWidth="1400" pageHeight="1700" background="#000000" math="0" shadow="0">
+        <mxGraphModel dx="1177" dy="611" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="0" page="0" pageScale="1" pageWidth="1400" pageHeight="1700" background="#000000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="NeuralCore Agent Execution Flow — ReAct Loop" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                <mxCell id="title" value="NeuralCore Agent Execution Flow — ReAct Loop" style="text;html=1;strokeColor=none;fillColor=white;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="380" y="10" width="640" height="36" as="geometry"/>
                 </mxCell>
                 <mxCell id="start" value="Run Request&#xa;(input, session_id, user_id)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" parent="1" vertex="1">
                     <mxGeometry x="600" y="70" width="200" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="fJYWkKUbqycP5EZPu560-1" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="validate" target="start">
+                <mxCell id="fJYWkKUbqycP5EZPu560-1" value="" style="edgeStyle=none;html=1;" parent="1" source="validate" target="start" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="validate" value="Validate Agent State&#xa;(active? guardrail config?)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" parent="1" vertex="1">
