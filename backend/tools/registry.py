@@ -139,12 +139,36 @@ def reset_tool_registry() -> None:
     _GLOBAL_REGISTRY = None
 
 
+# tools/registry.py — sahi version, isse use karo
 def _register_builtin_tools(registry: ToolRegistry) -> None:
     from tools.builtin.calculator import CALCULATOR_SCHEMA, calculator_handler
+    from tools.builtin.datetime_tool import (
+        COMPARE_TIMEZONES_SCHEMA,
+        GET_CURRENT_TIME_SCHEMA,
+        compare_timezones_handler,
+        get_current_time_handler,
+    )
     from tools.builtin.file_reader import FILE_READER_SCHEMA, file_reader_handler
     from tools.builtin.memory import MEMORY_READ_SCHEMA, MEMORY_WRITE_SCHEMA, memory_read_handler, memory_write_handler
     from tools.builtin.retrieval import RETRIEVAL_SCHEMA, retrieval_handler
+    from tools.builtin.timer import (
+        CANCEL_TIMER_SCHEMA,
+        CHECK_TIMER_SCHEMA,
+        START_TIMER_SCHEMA,
+        WAIT_FOR_TIMER_SCHEMA,
+        cancel_timer_handler,
+        check_timer_handler,
+        start_timer_handler,
+        wait_for_timer_handler,
+    )
+    from tools.builtin.unit_converter import UNIT_CONVERTER_SCHEMA, unit_converter_handler
     from tools.builtin.web_search import WEB_SEARCH_SCHEMA, web_search_handler
+    from tools.builtin.wikipedia import (
+        WIKIPEDIA_PAGE_CONTENT_SCHEMA,
+        WIKIPEDIA_SEARCH_SCHEMA,
+        wikipedia_full_page_handler,
+        wikipedia_search_handler,
+    )
 
     registry.register(CALCULATOR_SCHEMA, calculator_handler)
     registry.register(FILE_READER_SCHEMA, file_reader_handler)
@@ -152,3 +176,12 @@ def _register_builtin_tools(registry: ToolRegistry) -> None:
     registry.register(MEMORY_WRITE_SCHEMA, memory_write_handler)
     registry.register(RETRIEVAL_SCHEMA, retrieval_handler)
     registry.register(WEB_SEARCH_SCHEMA, web_search_handler)
+    registry.register(GET_CURRENT_TIME_SCHEMA, get_current_time_handler)
+    registry.register(COMPARE_TIMEZONES_SCHEMA, compare_timezones_handler)
+    registry.register(START_TIMER_SCHEMA, start_timer_handler)
+    registry.register(CHECK_TIMER_SCHEMA, check_timer_handler)
+    registry.register(WAIT_FOR_TIMER_SCHEMA, wait_for_timer_handler)
+    registry.register(CANCEL_TIMER_SCHEMA, cancel_timer_handler)
+    registry.register(WIKIPEDIA_SEARCH_SCHEMA, wikipedia_search_handler)
+    registry.register(WIKIPEDIA_PAGE_CONTENT_SCHEMA, wikipedia_full_page_handler)
+    registry.register(UNIT_CONVERTER_SCHEMA, unit_converter_handler)
