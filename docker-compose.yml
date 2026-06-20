@@ -87,11 +87,14 @@ services:
       PYTHONDONTWRITEBYTECODE: "1"
       LOG_LEVEL: debug
       NEURALCORE_ENV: development
+      DATABASE__URL: postgresql+asyncpg://neuralcore:dev-password-change-in-prod@postgres:5432/neuralcore
       DATABASE_HOST: postgres
       DATABASE_PORT: "5432"
       DATABASE_NAME: neuralcore
       DATABASE_USER: neuralcore
       DATABASE_PASSWORD: dev-password-change-in-prod
+      AUTH__JWT__PRIVATE_KEY_PATH: /app/keys/private.pem
+      AUTH__JWT__PUBLIC_KEY_PATH: /app/keys/public.pem
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       REDIS_PASSWORD: dev-redis-password-change-in-prod
@@ -110,6 +113,7 @@ services:
     volumes:
       - ./backend:/app
       - ./configs:/app/configs
+      - ./keys:/app/keys
     networks:
       - neuralcore-network
     depends_on:
@@ -188,156 +192,156 @@ services:
   #   command: /app/start.sh
   #   command: celery -A workers.tasks worker --loglevel=info
 
-  workers:
-    build:
-      context: .
-      dockerfile: infrastructure/docker/worker.Dockerfile
-    container_name: neuralcore-workers-dev
-    environment:
-      PYTHONUNBUFFERED: "1"
-      PYTHONDONTWRITEBYTECODE: "1"
-      LOG_LEVEL: debug
-      NEURALCORE_ENV: development
-      DATABASE_HOST: postgres
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: neuralcore
-      DATABASE_USER: neuralcore
-      DATABASE_PASSWORD: dev-password-change-in-prod
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: dev-redis-password-change-in-prod
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: "6333"
-      QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
-      CELERY_BROKER_URL: redis://:dev-redis-password-change-in-prod@redis:6379/0
-      CELERY_RESULT_BACKEND: redis://:dev-redis-password-change-in-prod@redis:6379/1
-    volumes:
-      - ./backend:/app
-      - ./configs:/app/configs
-    networks:
-      - neuralcore-network  # ← SAME NETWORK
-    depends_on:
-      api:
-        condition: service_healthy
-    command: sleep infinity  # ← ADD THIS
-    restart: unless-stopped
+  # workers:
+  #   build:
+  #     context: .
+  #     dockerfile: infrastructure/docker/worker.Dockerfile
+  #   container_name: neuralcore-workers-dev
+  #   environment:
+  #     PYTHONUNBUFFERED: "1"
+  #     PYTHONDONTWRITEBYTECODE: "1"
+  #     LOG_LEVEL: debug
+  #     NEURALCORE_ENV: development
+  #     DATABASE_HOST: postgres
+  #     DATABASE_PORT: "5432"
+  #     DATABASE_NAME: neuralcore
+  #     DATABASE_USER: neuralcore
+  #     DATABASE_PASSWORD: dev-password-change-in-prod
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: "6379"
+  #     REDIS_PASSWORD: dev-redis-password-change-in-prod
+  #     QDRANT_HOST: qdrant
+  #     QDRANT_PORT: "6333"
+  #     QDRANT_API_KEY: dev-qdrant-api-key-change-in-prod
+  #     CELERY_BROKER_URL: redis://:dev-redis-password-change-in-prod@redis:6379/0
+  #     CELERY_RESULT_BACKEND: redis://:dev-redis-password-change-in-prod@redis:6379/1
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./configs:/app/configs
+  #   networks:
+  #     - neuralcore-network  # ← SAME NETWORK
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #   command: sleep infinity  # ← ADD THIS
+  #   restart: unless-stopped
 
-  frontend:
-    build:
-      context: .
-      dockerfile: infrastructure/docker/frontend.Dockerfile
-    container_name: neuralcore-frontend-dev
-    environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_APP_URL: http://localhost:5242
-    ports:
-      - "5242:5242"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - neuralcore-network
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5242"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: infrastructure/docker/frontend.Dockerfile
+  #   container_name: neuralcore-frontend-dev
+  #   environment:
+  #     NODE_ENV: development
+  #     NEXT_PUBLIC_API_URL: http://localhost:8000
+  #     NEXT_PUBLIC_APP_URL: http://localhost:5242
+  #   ports:
+  #     - "5242:5242"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   networks:
+  #     - neuralcore-network
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5242"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: neuralcore-prometheus-dev
-    volumes:
-      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
-    networks:
-      - neuralcore-network
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: neuralcore-prometheus-dev
+  #   volumes:
+  #     - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - neuralcore-network
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+  #     - '--web.console.templates=/usr/share/prometheus/consoles'
+  #     - '--web.enable-lifecycle'
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 10s
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: neuralcore-grafana-dev
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_SECURITY_ADMIN_USER: admin
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    volumes:
-      # - ./infrastructure/monitoring/grafana.json:/etc/grafana/provisioning/dashboards/neuralcore.json
-      - grafana_data:/var/lib/grafana
-    ports:
-      - "3001:3000"
-    networks:
-      - neuralcore-network
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: neuralcore-grafana-dev
+  #   environment:
+  #     GF_SECURITY_ADMIN_PASSWORD: admin
+  #     GF_SECURITY_ADMIN_USER: admin
+  #     GF_INSTALL_PLUGINS: grafana-piechart-panel
+  #     GF_USERS_ALLOW_SIGN_UP: "false"
+  #   volumes:
+  #     # - ./infrastructure/monitoring/grafana.json:/etc/grafana/provisioning/dashboards/neuralcore.json
+  #     - grafana_data:/var/lib/grafana
+  #   ports:
+  #     - "3001:3000"
+  #   networks:
+  #     - neuralcore-network
+  #   depends_on:
+  #     prometheus:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
-  loki:
-    image: grafana/loki:latest
-    container_name: neuralcore-loki-dev
-    volumes:
-      - ./infrastructure/monitoring/loki.yml:/etc/loki/local-config.yaml
-      - loki_data:/loki
-    ports:
-      - "3100:3100"
-    networks:
-      - neuralcore-network
-    # command: -config.file=/etc/loki/local-config.yaml
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # loki:
+  #   image: grafana/loki:latest
+  #   container_name: neuralcore-loki-dev
+  #   volumes:
+  #     - ./infrastructure/monitoring/loki.yml:/etc/loki/local-config.yaml
+  #     - loki_data:/loki
+  #   ports:
+  #     - "3100:3100"
+  #   networks:
+  #     - neuralcore-network
+  #   # command: -config.file=/etc/loki/local-config.yaml
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 10s
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
