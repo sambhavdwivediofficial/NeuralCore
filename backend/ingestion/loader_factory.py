@@ -10,6 +10,7 @@ _LOADER_REGISTRY: dict[SourceType, type[BaseLoader]] = {}
 
 _ALL_LOADER_MODULES: tuple[str, ...] = (
     "audio_loader",
+    "image_loader",
     "bitbucket_loader",
     "confluence_loader",
     "csv_loader",

@@ -30,6 +30,7 @@ async def analyze_image(
     file: UploadFile = File(...),
     question: Optional[str] = Query(default=None),
     extract_text: bool = Query(default=True),
+    use_vision: bool = Query(default=True),
 ) -> ImageQueryResponse:
     from pathlib import Path
 
@@ -41,42 +42,43 @@ async def analyze_image(
     if len(content) > _MAX_IMAGE_SIZE:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image exceeds 15MB limit")
 
-    import asyncio
+    from ingestion.image_loader import ImageLoader
 
-    ocr_text, image_metadata = await asyncio.to_thread(_run_ocr, content, extract_text)
+    loader = ImageLoader(settings)
+    documents = await loader.load({
+        "content_base64": __import__("base64").b64encode(content).decode("utf-8"),
+        "file_path": file.filename or "image.png",
+        "extract_text": extract_text,
+        "use_vision": use_vision,
+    })
+
+    doc = documents[0]
+    ocr_text = ""
+    vision_description = ""
+    for part in doc["text"].split("\n\n"):
+        if part.startswith("Text extracted from image (OCR):"):
+            ocr_text = part.replace("Text extracted from image (OCR):\n", "")
+        elif part.startswith("Visual description (from vision model):"):
+            vision_description = part.replace("Visual description (from vision model):\n", "")
 
     from model_gateway.base_provider import ChatMessage, ChatRole, CompletionRequest
     from model_gateway.provider_factory import get_model_gateway
 
-    gateway = get_model_gateway(settings)
-
-    description_prompt = (
-        f"An image was uploaded (dimensions: {image_metadata.get('width')}x{image_metadata.get('height')}). "
-        f"{'Text extracted from the image via OCR: ' + ocr_text.strip() if ocr_text.strip() else 'No text was detected in the image via OCR.'}\n\n"
-        "Based on this information, provide a brief, useful description of what this image likely contains "
-        "(e.g. a screenshot, diagram, chart, document scan, photo). Be concise."
-    )
-    description_response = await gateway.chat_completion(
-        CompletionRequest(messages=[ChatMessage(role=ChatRole.USER, content=description_prompt)], max_tokens=256, temperature=0.3)
-    )
-    description = (description_response.content or "").strip()
-
     answer = ""
     if question:
+        gateway = get_model_gateway(settings)
         qa_prompt = (
-            f"Image context:\n"
-            f"- Description: {description}\n"
-            f"- OCR extracted text: {ocr_text.strip() or '(none detected)'}\n\n"
+            f"Image context:\n{doc['text']}\n\n"
             f"Question about the image: {question}\n\n"
-            "Answer the question based on the available image information. If the OCR text and description "
-            "aren't sufficient to answer confidently, say so clearly rather than guessing."
+            "Answer using only the information available above. If it isn't sufficient to answer "
+            "confidently, say so clearly rather than guessing."
         )
         answer_response = await gateway.chat_completion(
             CompletionRequest(messages=[ChatMessage(role=ChatRole.USER, content=qa_prompt)], max_tokens=512, temperature=0.2)
         )
         answer = (answer_response.content or "").strip()
 
-    return ImageQueryResponse(extracted_text=ocr_text.strip(), description=description, answer=answer)
+    return ImageQueryResponse(extracted_text=ocr_text.strip(), description=vision_description.strip(), answer=answer)
 
 
 @router.post("/ocr")

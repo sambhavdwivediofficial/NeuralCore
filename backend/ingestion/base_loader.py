@@ -23,6 +23,7 @@ class SourceType(str, enum.Enum):
     XLSX = "xlsx"
     AUDIO = "audio"
     VIDEO = "video"
+    IMAGE = "image"
     EMAIL = "email"
     WEBSITE = "website"
     SITEMAP = "sitemap"
