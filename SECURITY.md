@@ -53,6 +53,7 @@ Report vulnerabilities directly to the project author:
 - **Sambhav Dwivedi**
 - Website: [Sambhav Dwivedi](https://www.sambhavdwivedi.in)
 - LinkedIn: [Sambhav Dwivedi](https://www.linkedin.com/in/sambhavdwivedi)
+- Email: [sambhavdwivedi@outlook.com](mailto:sambhavdwivedi@outlook.com)
 
 **What to include in your report:**
 

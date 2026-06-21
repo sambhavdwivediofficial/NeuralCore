@@ -76,6 +76,7 @@ If you experience or witness behavior that violates this Code of Conduct, report
 - **Sambhav Dwivedi**
 - Website: [Sambhav Dwivedi](https://www.sambhavdwivedi.in)
 - LinkedIn: [Sambhav Dwivedi](https://www.linkedin.com/in/sambhavdwivedi)
+- Email: [sambhavdwivedi@outlook.com](mailto:sambhavdwivedi@outlook.com)
 
 All reports will be treated with confidentiality. We will not reveal the identity of the reporter without explicit consent.
 

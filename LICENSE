@@ -1,38 +1,47 @@
+NEURALCORE PROPRIETARY LICENSE
+
 Copyright (c) 2026 Sambhav Dwivedi
 
 All Rights Reserved.
 
-NeuralCore is proprietary software.
+NeuralCore and all associated materials are the exclusive property of Sambhav Dwivedi.
 
-Permission is NOT granted to use, copy, modify, merge, publish,
-distribute, sublicense, sell, lease, reverse engineer, create
-derivative works from, or otherwise exploit this software or any
-portion of it without prior written authorization from the copyright owner.
+No rights or licenses are granted under this License, except the limited permission to submit contributions in accordance with CONTRIBUTING.md.
 
-This restriction applies to:
+No person or entity is granted any right, permission, or license to use, copy, modify, distribute, publish, sublicense, sell, lease, rent, reverse engineer, decompile, create derivative works from, commercialize, host, deploy, train on, or otherwise exploit this software or any portion thereof for any purpose whatsoever without prior written authorization from the Copyright Owner.
 
-- Source code
-- Binaries
-- Models
-- Training pipelines
-- Documentation
-- Architecture designs
-- Specifications
-- SDKs
-- APIs
-- Examples
-- Configuration files
-- Infrastructure definitions
-- All associated intellectual property
+This restriction applies to, but is not limited to:
 
-Unauthorized use, reproduction, modification, redistribution,
-commercialization, or disclosure of this software is strictly prohibited.
+* Source code
+* Binaries
+* Models and model weights
+* Training pipelines
+* APIs and SDKs
+* Documentation
+* Examples and sample code
+* Specifications
+* Configuration files
+* Infrastructure definitions
+* Architecture documentation
+* Design assets
+* Database schemas
+* All related intellectual property
 
-This software and all related materials are provided on an
-"AS IS" basis without warranty of any kind.
+Contributions may be submitted only through the official contribution process described in CONTRIBUTING.md.
 
-For commercial licensing, partnership opportunities, enterprise
-agreements, or written authorization requests, contact the copyright owner.
+Submitting a contribution does not grant any ownership, usage, distribution, modification, commercialization, or other rights to the contributor beyond those expressly stated in this License and CONTRIBUTING.md.
+
+The Copyright Owner reserves the right to accept, reject, modify, incorporate, or remove any contribution at their sole discretion.
+
+By submitting a contribution, the contributor grants the Copyright Owner a perpetual, worldwide, royalty-free license to use, modify, distribute, and incorporate the contribution into NeuralCore.
+
+Public availability of the Software does not grant any ownership, usage, modification, redistribution, commercialization, or other rights.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Unauthorized use, copying, modification, distribution, disclosure, or exploitation of this Software is strictly prohibited.
+
+For licensing inquiries: sambhavdwivedi@outlook.com
 
 Copyright Owner:
 Sambhav Dwivedi

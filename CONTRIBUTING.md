@@ -217,7 +217,7 @@ All contributions must include tests. There are no exceptions.
 
 **Test naming:** Test functions must be named `test_<what_is_being_tested>_<expected_outcome>` — for example, `test_tenant_isolation_prevents_cross_tenant_query`.
 
-**Coverage:** New code must be covered at 90% or above. Coverage must not decrease from the baseline for any existing module you modify.
+**Coverage:** New code should include comprehensive test coverage and must not reduce overall project coverage. Coverage must not decrease from the baseline for any existing module you modify.
 
 **Test location:** Tests live in `backend/tests/`. Test files mirror the structure of the source they test: `backend/retrieval/hybrid_retriever.py` is tested in `backend/tests/test_hybrid_retriever.py`.
 

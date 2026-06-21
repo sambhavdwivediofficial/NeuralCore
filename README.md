@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>⚠️ Actively Developed — Production Release Coming Soon</strong>
+  <strong>⚠️ Active Development — Beta Release Approaching</strong>
 </p>
 
 <p align="center">
