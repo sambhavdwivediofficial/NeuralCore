@@ -25,6 +25,8 @@ from api.routes import (
     vectorstores,
     workflows,
     workspaces,
+    voice,
+    vision,
 )
 
 api_router = APIRouter()
@@ -50,3 +52,5 @@ api_router.include_router(prompts.router, prefix="/prompts", tags=["Prompts"])
 api_router.include_router(pipelines.router, prefix="/pipelines", tags=["Pipelines"])
 api_router.include_router(plugins.router, prefix="/plugins", tags=["Plugins"])
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+api_router.include_router(voice.router, prefix="/voice", tags=["Voice"])
+api_router.include_router(vision.router, prefix="/vision", tags=["Vision"])

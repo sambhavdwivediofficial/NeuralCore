@@ -28,6 +28,8 @@ motor==3.7.0
 bcrypt==4.0.1
 passlib==1.7.4
 asyncmy==0.2.10
+pytesseract==0.3.13
+Pillow==12.2.0
 youtube-transcript-api==0.6.3
 duckduckgo-search==8.1.1
 pyotp==2.9.0
