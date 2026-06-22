@@ -1,11 +1,12 @@
-// context/AuthContext.jsx
+// frontend/context/AuthContext.jsx
 
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as authService from '@/services/auth';
 import { ROUTES } from '@/lib/routes';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
 const AuthContext = createContext(null);
 
@@ -13,15 +14,19 @@ export function AuthProvider({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [mfaPending, setMfaPending] = useState(null);
+  const loadedRef = useRef(false);
+
+  const hasCookie = () =>
+    typeof document !== 'undefined' &&
+    document.cookie.split(';').some((c) => c.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
 
   const loadUser = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await authService.getCurrentUser();
       setUser(data);
-      setError(null);
-    } catch (err) {
+    } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -29,32 +34,39 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const token =
-      typeof document !== 'undefined' &&
-      document.cookie.includes('nc_access_token=');
-  
-    if (token) {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    if (hasCookie()) {
       loadUser();
     } else {
       setIsLoading(false);
     }
   }, [loadUser]);
 
-  const signIn = useCallback(
-    async (credentials) => {
-      setError(null);
-      const data = await authService.login(credentials);
-      setUser(data.user);
-      return data;
-    },
-    []
-  );
+  const signIn = useCallback(async (credentials) => {
+    const data = await authService.login(credentials);
+    if (data.mfa_required) {
+      setMfaPending(data.challenge_token);
+      return { mfa_required: true };
+    }
+    setUser(data.user ?? data);
+    return data;
+  }, []);
+
+  const completeMfa = useCallback(async (code) => {
+    if (!mfaPending) throw new Error('No MFA challenge active');
+    const data = await authService.completeMfaChallenge(mfaPending, code);
+    setMfaPending(null);
+    setUser(data.user ?? data);
+    return data;
+  }, [mfaPending]);
 
   const signOut = useCallback(async () => {
     try {
       await authService.logout();
     } finally {
       setUser(null);
+      setMfaPending(null);
       router.push(ROUTES.LOGIN);
     }
   }, [router]);
@@ -63,27 +75,23 @@ export function AuthProvider({ children }) {
     setUser((prev) => (prev ? { ...prev, ...partial } : prev));
   }, []);
 
-  const value = useMemo(
-    () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      isLoading,
-      error,
-      signIn,
-      signOut,
-      updateUser,
-      refresh: loadUser,
-    }),
-    [user, isLoading, error, signIn, signOut, updateUser, loadUser]
-  );
+  const value = useMemo(() => ({
+    user,
+    isAuthenticated: Boolean(user),
+    isLoading,
+    mfaPending: Boolean(mfaPending),
+    signIn,
+    completeMfa,
+    signOut,
+    updateUser,
+    refresh: loadUser,
+  }), [user, isLoading, mfaPending, signIn, completeMfa, signOut, updateUser, loadUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');
+  return ctx;
 }

@@ -1,9 +1,13 @@
-// services/auth.js
+// frontend/services/auth.js
 
 import { apiGet, apiPost, apiPatch } from '@/services/api';
 
 export async function login(credentials) {
   return apiPost('/auth/login', credentials);
+}
+
+export async function signup(payload) {
+  return apiPost('/auth/signup', payload);
 }
 
 export async function logout() {
@@ -12,6 +16,34 @@ export async function logout() {
 
 export async function refreshSession() {
   return apiPost('/auth/refresh', {});
+}
+
+export async function forgotPassword(email) {
+  return apiPost('/auth/forgot-password', { email });
+}
+
+export async function resetPassword(token, new_password) {
+  return apiPost('/auth/reset-password', { token, new_password });
+}
+
+export async function requestVerifyEmail() {
+  return apiPost('/auth/verify-email/request', {});
+}
+
+export async function verifyEmail(token) {
+  return apiPost('/auth/verify-email', { token });
+}
+
+export async function getInvite(token) {
+  return apiGet(`/auth/invite/${token}`);
+}
+
+export async function acceptInvite(payload) {
+  return apiPost('/auth/accept-invite', payload);
+}
+
+export async function completeMfaChallenge(challenge_token, code) {
+  return apiPost('/auth/mfa/challenge', { challenge_token, code });
 }
 
 export async function getCurrentUser() {
@@ -30,12 +62,16 @@ export async function enableMfa() {
   return apiPost('/auth/mfa/enable', {});
 }
 
-export async function verifyMfa(payload) {
-  return apiPost('/auth/mfa/verify', payload);
+export async function verifyMfa(code) {
+  return apiPost('/auth/mfa/verify', { code });
 }
 
 export async function disableMfa() {
   return apiPost('/auth/mfa/disable', {});
+}
+
+export async function toggleMfa(enabled) {
+  return apiPost('/auth/mfa/toggle', { enabled });
 }
 
 export async function listSessions() {
@@ -44,10 +80,6 @@ export async function listSessions() {
 
 export async function revokeSession(sessionId) {
   return apiPost(`/auth/sessions/${sessionId}/revoke`, {});
-}
-
-export async function toggleTwoFactor(enabled) {
-  return apiPost('/auth/mfa/toggle', { enabled });
 }
 
 export async function listApiKeys() {

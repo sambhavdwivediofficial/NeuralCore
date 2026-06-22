@@ -1,11 +1,9 @@
-// // middleware.js
+// // frontend/middleware.js
 
 // import { NextResponse } from 'next/server';
 // import { jwtVerify } from 'jose';
-
-// const PUBLIC_ROUTES = ['/login'];
-
-// const AUTH_COOKIE_NAME = 'nc_access_token';
+// import { PUBLIC_ROUTES, PUBLIC_ROUTE_PREFIXES } from '@/lib/routes';
+// import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
 // async function verifyToken(token) {
 //   try {
@@ -16,26 +14,41 @@
 //       algorithms: ['HS256', 'RS256'],
 //     });
 //     return payload;
-//   } catch (error) {
+//   } catch {
 //     return null;
 //   }
+// }
+
+// function isPublicPath(pathname) {
+//   if (PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'))) {
+//     return true;
+//   }
+//   if (PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+//     return true;
+//   }
+//   return false;
 // }
 
 // export async function middleware(request) {
 //   const { pathname } = request.nextUrl;
 
-//   if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')) {
+//   if (
+//     pathname.startsWith('/_next') ||
+//     pathname.startsWith('/api') ||
+//     pathname.includes('.')
+//   ) {
 //     return NextResponse.next();
 //   }
 
-//   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+//   const isPublic = isPublicPath(pathname);
 //   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-//   if (isPublicRoute) {
+//   if (isPublic) {
 //     if (token) {
 //       const payload = await verifyToken(token);
 //       if (payload) {
-//         return NextResponse.redirect(new URL('/dashboard', request.url));
+//         const dest = payload.tenant_id ? '/dashboard' : '/onboarding';
+//         return NextResponse.redirect(new URL(dest, request.url));
 //       }
 //     }
 //     return NextResponse.next();
@@ -57,22 +70,24 @@
 //     return response;
 //   }
 
-//   const requestHeaders = new Headers(request.headers);
-//   requestHeaders.set('x-user-id', payload.sub || '');
-//   requestHeaders.set('x-user-role', payload.role || 'viewer');
-//   requestHeaders.set('x-tenant-id', payload.tenant_id || '');
+//   if (!payload.tenant_id && pathname !== '/onboarding') {
+//     return NextResponse.redirect(new URL('/onboarding', request.url));
+//   }
 
-//   return NextResponse.next({
-//     request: {
-//       headers: requestHeaders,
-//     },
-//   });
+//   if (pathname.startsWith('/admin') && payload.role !== 'super_admin') {
+//     return NextResponse.redirect(new URL('/dashboard', request.url));
+//   }
+
+//   const requestHeaders = new Headers(request.headers);
+//   requestHeaders.set('x-user-id', String(payload.sub ?? ''));
+//   requestHeaders.set('x-user-role', String(payload.role ?? 'viewer'));
+//   requestHeaders.set('x-tenant-id', String(payload.tenant_id ?? ''));
+
+//   return NextResponse.next({ request: { headers: requestHeaders } });
 // }
 
 // export const config = {
-//   matcher: [
-//     '/((?!_next/static|_next/image|favicon.ico|robots.txt|images).*)',
-//   ],
+//   matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|images).*)'],
 // };
 
 import { NextResponse } from "next/server";

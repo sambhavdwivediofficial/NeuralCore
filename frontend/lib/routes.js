@@ -1,29 +1,44 @@
-// lib/routes.js
+// frontend/lib/routes.js
 
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  LOGIN_MFA: '/login/mfa',
+  SIGNUP: '/signup',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: (token) => `/reset-password/${token}`,
+  VERIFY_EMAIL: '/verify-email',
+  ACCEPT_INVITE: (token) => `/accept-invite/${token}`,
+  AUTH_CALLBACK: '/auth/callback',
+  ONBOARDING: '/onboarding',
+
   DASHBOARD: '/dashboard',
 
   PROJECTS: '/projects',
   PROJECT_CREATE: '/projects/create',
-  PROJECT_DETAIL: (projectId) => `/projects/${projectId}`,
-  PROJECT_ANALYTICS: (projectId) => `/projects/${projectId}/analytics`,
-  PROJECT_SETTINGS: (projectId) => `/projects/${projectId}/settings`,
+  PROJECT: (id) => `/projects/${id}`,
+  PROJECT_ANALYTICS: (id) => `/projects/${id}/analytics`,
+  PROJECT_SETTINGS: (id) => `/projects/${id}/settings`,
 
   AGENTS: '/agents',
   AGENT_CREATE: '/agents/create',
-  AGENT_DETAIL: (agentId) => `/agents/${agentId}`,
-  AGENT_SETTINGS: (agentId) => `/agents/${agentId}/settings`,
+  AGENT: (id) => `/agents/${id}`,
+  AGENT_SETTINGS: (id) => `/agents/${id}/settings`,
 
   KNOWLEDGE_BASES: '/knowledge-bases',
   KNOWLEDGE_BASE_CREATE: '/knowledge-bases/create',
-  KNOWLEDGE_BASE_DETAIL: (kbId) => `/knowledge-bases/${kbId}`,
-  KNOWLEDGE_BASE_CHUNKS: (kbId) => `/knowledge-bases/${kbId}/chunks`,
-  KNOWLEDGE_BASE_EMBEDDINGS: (kbId) => `/knowledge-bases/${kbId}/embeddings`,
-  KNOWLEDGE_BASE_RETRIEVAL: (kbId) => `/knowledge-bases/${kbId}/retrieval`,
+  KNOWLEDGE_BASE: (id) => `/knowledge-bases/${id}`,
+  KNOWLEDGE_BASE_CHUNKS: (id) => `/knowledge-bases/${id}/chunks`,
+  KNOWLEDGE_BASE_EMBEDDINGS: (id) => `/knowledge-bases/${id}/embeddings`,
+  KNOWLEDGE_BASE_RETRIEVAL: (id) => `/knowledge-bases/${id}/retrieval`,
+
+  CHAT: '/chat',
 
   RETRIEVAL_DEBUGGER: '/retrieval-debugger',
+  RETRIEVAL_DEBUGGER_QUERY: '/retrieval-debugger/query',
+  RETRIEVAL_DEBUGGER_CHUNKS: '/retrieval-debugger/chunks',
+  RETRIEVAL_DEBUGGER_RERANKING: '/retrieval-debugger/reranking',
+  RETRIEVAL_DEBUGGER_METRICS: '/retrieval-debugger/metrics',
 
   VECTOR_STORES: '/vector-stores',
   VECTOR_STORE_QDRANT: '/vector-stores/qdrant',
@@ -35,41 +50,88 @@ export const ROUTES = {
   MONITORING_TRACES: '/monitoring/traces',
   MONITORING_ALERTS: '/monitoring/alerts',
 
+  WORKFLOWS: '/workflows',
+  WORKFLOW_CREATE: '/workflows/create',
+  WORKFLOW: (id) => `/workflows/${id}`,
+
+  PROMPTS: '/prompts',
+
+  DATASETS: '/datasets',
+  DATASET_CREATE: '/datasets/create',
+
+  PLUGINS: '/plugins',
+
+  ORGANIZATIONS: '/organizations',
+  ORGANIZATION_CREATE: '/organizations/create',
+  ORGANIZATION: (id) => `/organizations/${id}`,
+  ORGANIZATION_SETTINGS: (id) => `/organizations/${id}/settings`,
+
   SETTINGS: '/settings',
-  SETTINGS_API_KEYS: '/settings/api-keys',
   SETTINGS_SECURITY: '/settings/security',
+  SETTINGS_API_KEYS: '/settings/api-keys',
   SETTINGS_USERS: '/settings/users',
+
+  ADMIN: '/admin',
+  ADMIN_ORGANIZATIONS: '/admin/organizations',
 };
+
+export const PUBLIC_ROUTES = [
+  ROUTES.LOGIN,
+  ROUTES.LOGIN_MFA,
+  ROUTES.SIGNUP,
+  ROUTES.FORGOT_PASSWORD,
+  ROUTES.VERIFY_EMAIL,
+  ROUTES.AUTH_CALLBACK,
+];
+
+export const PUBLIC_ROUTE_PREFIXES = [
+  '/reset-password/',
+  '/accept-invite/',
+];
 
 export const NAV_SECTIONS = [
   {
-    label: 'General',
+    id: 'main',
+    label: null,
     items: [
-      { label: 'Dashboard', href: ROUTES.DASHBOARD, icon: 'LayoutDashboard' },
-      { label: 'Projects', href: ROUTES.PROJECTS, icon: 'FolderKanban' },
+      { id: 'dashboard', label: 'Dashboard', href: ROUTES.DASHBOARD, icon: 'LayoutDashboard' },
+      { id: 'chat', label: 'Chat', href: ROUTES.CHAT, icon: 'MessageSquare' },
     ],
   },
   {
+    id: 'build',
     label: 'Build',
     items: [
-      { label: 'Knowledge Bases', href: ROUTES.KNOWLEDGE_BASES, icon: 'Database' },
-      { label: 'Agents', href: ROUTES.AGENTS, icon: 'Bot' },
-      { label: 'Vector Stores', href: ROUTES.VECTOR_STORES, icon: 'Boxes' },
+      { id: 'projects', label: 'Projects', href: ROUTES.PROJECTS, icon: 'FolderKanban' },
+      { id: 'agents', label: 'Agents', href: ROUTES.AGENTS, icon: 'Bot' },
+      { id: 'knowledge-bases', label: 'Knowledge Bases', href: ROUTES.KNOWLEDGE_BASES, icon: 'BookOpen' },
+      { id: 'workflows', label: 'Workflows', href: ROUTES.WORKFLOWS, icon: 'Workflow' },
+      { id: 'datasets', label: 'Datasets', href: ROUTES.DATASETS, icon: 'Database' },
+      { id: 'prompts', label: 'Prompts', href: ROUTES.PROMPTS, icon: 'FileText' },
     ],
   },
   {
-    label: 'Diagnostics',
+    id: 'debug',
+    label: 'Debug',
     items: [
-      { label: 'Retrieval Debugger', href: ROUTES.RETRIEVAL_DEBUGGER, icon: 'SearchCode' },
-      { label: 'Monitoring', href: ROUTES.MONITORING, icon: 'Activity' },
+      { id: 'retrieval-debugger', label: 'Retrieval Debugger', href: ROUTES.RETRIEVAL_DEBUGGER, icon: 'Search' },
+      { id: 'vector-stores', label: 'Vector Stores', href: ROUTES.VECTOR_STORES, icon: 'Layers' },
     ],
   },
   {
-    label: 'Workspace',
+    id: 'ops',
+    label: 'Operations',
     items: [
-      { label: 'Settings', href: ROUTES.SETTINGS, icon: 'Settings' },
+      { id: 'monitoring', label: 'Monitoring', href: ROUTES.MONITORING, icon: 'Activity' },
+      { id: 'plugins', label: 'Plugins', href: ROUTES.PLUGINS, icon: 'Puzzle' },
+    ],
+  },
+  {
+    id: 'account',
+    label: 'Account',
+    items: [
+      { id: 'organizations', label: 'Organizations', href: ROUTES.ORGANIZATIONS, icon: 'Building2' },
+      { id: 'settings', label: 'Settings', href: ROUTES.SETTINGS, icon: 'Settings' },
     ],
   },
 ];
-
-export const PUBLIC_ROUTES = [ROUTES.LOGIN];

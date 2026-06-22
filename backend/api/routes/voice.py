@@ -17,14 +17,14 @@ from settings import Settings
 router = APIRouter()
 
 _SUPPORTED_AUDIO_FORMATS = {".mp3", ".wav", ".m4a", ".ogg", ".webm", ".flac"}
-_DEFAULT_TTS_VOICE = "hi-IN-AmayaNeural"
+_DEFAULT_TTS_VOICE = "hi-IN-MadhurNeural"
 _AVAILABLE_VOICES = [
     {"id": "en-US-AriaNeural", "name": "Aria (US, Female)", "language": "en-US"},
     {"id": "en-US-GuyNeural", "name": "Guy (US, Male)", "language": "en-US"},
     {"id": "en-GB-SoniaNeural", "name": "Sonia (UK, Female)", "language": "en-GB"},
     {"id": "en-IN-NeerjaNeural", "name": "Neerja (India, Female)", "language": "en-IN"},
     {"id": "en-IN-PrabhatNeural", "name": "Prabhat (India, Male)", "language": "en-IN"},
-    {"id": "hi-IN-AmayaNeural", "name": "Amaya (Hindi, Female)", "language": "hi-IN"},
+    {"id": "hi-IN-SwaraNeural", "name": "Swara (Hindi, Female)", "language": "hi-IN"},
     {"id": "hi-IN-MadhurNeural", "name": "Madhur (Hindi, Male)", "language": "hi-IN"},
 ]
 
