@@ -11,7 +11,7 @@ import { ROUTES } from '@/lib/routes';
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
-  { label: 'Metrics', href: '#metrics' },
+  { label: 'Architecture', href: '/architecture' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Changelog', href: '/changelog' },
   { label: 'Security', href: '/security' },

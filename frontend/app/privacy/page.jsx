@@ -57,6 +57,37 @@ const SECTIONS = [
   },
 ];
 
+function renderBodyWithLinks(text) {
+  const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  
+  return text.split('\n\n').map((para, i) => {
+    let parts = para.split(/(https?:\/\/[^\s]+|[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+    
+    return (
+      <p key={i} className="text-sm text-muted-foreground leading-relaxed">
+        {parts.map((part, j) => {
+          if (part.match(emailRegex)) {
+            return (
+              <a key={j} href={`mailto:${part}`} className="text-primary hover:underline">
+                {part}
+              </a>
+            );
+          }
+          if (part.match(urlRegex)) {
+            return (
+              <a key={j} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                {part}
+              </a>
+            );
+          }
+          return part;
+        })}
+      </p>
+    );
+  });
+}
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -84,9 +115,7 @@ export default function PrivacyPage() {
           {SECTIONS.map((s) => (
             <div key={s.title} className="flex flex-col gap-2">
               <h2 className="text-base font-semibold text-foreground">{s.title}</h2>
-              {s.body.split('\n\n').map((para, i) => (
-                <p key={i} className="text-sm text-muted-foreground leading-relaxed">{para}</p>
-              ))}
+              {renderBodyWithLinks(s.body)}
             </div>
           ))}
         </div>

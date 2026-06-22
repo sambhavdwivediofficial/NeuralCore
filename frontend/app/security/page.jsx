@@ -130,13 +130,16 @@ export default function SecurityPage() {
               If you discover a security vulnerability in NeuralCore, please report it responsibly.
               Do not disclose vulnerabilities publicly until we have had a reasonable opportunity to
               address them. We take all reports seriously and will acknowledge receipt within 48 hours.
-            </p> 
-            <a
-              href="mailto:sambhavdwivedi@outlook.com?subject=NeuralCore Security Vulnerability"
-              className="text-xs font-medium text-primary hover:underline w-fit"
-            >
-              Report a vulnerability → sambhavdwivedi@outlook.com
-            </a>
+            </p>
+            <p className="text-xs text-foreground">
+              Report a vulnerability →{' '}
+              <a
+                href="mailto:sambhavdwivedi@outlook.com?subject=NeuralCore Security Vulnerability"
+                className="text-primary hover:underline"
+              >
+                sambhavdwivedi@outlook.com
+              </a>
+            </p>
           </div>
         </div>
       </div>

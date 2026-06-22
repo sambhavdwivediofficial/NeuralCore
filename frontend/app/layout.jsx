@@ -29,7 +29,7 @@ export const metadata = {
   },
   description: 'Enterprise AI infrastructure platform for RAG, agents, and knowledge management.',
   icons: {
-    icon: '/logo.png',
+    icon: '/image.png',
   },
 };
 
