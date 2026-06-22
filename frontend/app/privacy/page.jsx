@@ -6,7 +6,7 @@ import '@/styles/landing.css';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export const metadata = {
-  title: 'Privacy Policy — NeuralCore',
+  title: 'Privacy Policy',
   description: 'NeuralCore Privacy Policy — how we collect, use, and protect your data.',
 };
 

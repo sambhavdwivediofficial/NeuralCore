@@ -6,7 +6,7 @@ import '@/styles/landing.css';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export const metadata = {
-  title: 'Security — NeuralCore',
+  title: 'Security',
   description: 'NeuralCore security architecture, practices, and responsible disclosure.',
 };
 

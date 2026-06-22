@@ -6,7 +6,7 @@ import '@/styles/landing.css';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export const metadata = {
-  title: 'Terms of Service — NeuralCore',
+  title: 'Terms of Service',
   description: 'NeuralCore Terms of Service agreement.',
 };
 

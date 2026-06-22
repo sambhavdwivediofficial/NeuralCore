@@ -11,7 +11,7 @@ import { CTASection } from '@/components/landing/CTASection';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export const metadata = {
-  title: 'NeuralCore — AI Infrastructure Platform',
+  title: 'NeuralCore | AI Infrastructure Platform',
   description:
     'Production-grade RAG, Agentic AI, Multi-Agent Orchestration, Knowledge Graphs, Fine-Tuning, and Enterprise Multi-Tenancy in one modular platform.',
 };

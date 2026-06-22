@@ -6,7 +6,7 @@ import '@/styles/landing.css';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export const metadata = {
-  title: 'Changelog — NeuralCore',
+  title: 'Changelog',
   description: 'NeuralCore platform release history and updates.',
 };
 
