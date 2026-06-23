@@ -76,12 +76,18 @@ export const ROUTES = {
 };
 
 export const PUBLIC_ROUTES = [
-  ROUTES.LOGIN,
-  ROUTES.LOGIN_MFA,
-  ROUTES.SIGNUP,
-  ROUTES.FORGOT_PASSWORD,
-  ROUTES.VERIFY_EMAIL,
-  ROUTES.AUTH_CALLBACK,
+  '/',
+  '/login',
+  '/login/mfa',
+  '/signup',
+  '/forgot-password',
+  '/verify-email',
+  '/auth/callback',
+  '/terms',
+  '/privacy',
+  '/security',
+  '/changelog',
+  '/architecture',
 ];
 
 export const PUBLIC_ROUTE_PREFIXES = [

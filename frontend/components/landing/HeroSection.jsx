@@ -2,154 +2,263 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight, Github, Zap } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, Github } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 
-const TERMINAL_LINES = [
-  { delay: 0.2, type: 'prompt', text: 'neuralcore pipeline run --type agentic_rag' },
-  { delay: 0.8, type: 'comment', text: '# Initializing hybrid retrieval pipeline...' },
-  { delay: 1.2, type: 'key', text: '✓ ', suffix: 'Query rewritten via HyDE', suffixType: 'string' },
-  { delay: 1.6, type: 'key', text: '✓ ', suffix: 'Vector search  → 847 chunks indexed', suffixType: 'normal' },
-  { delay: 2.0, type: 'key', text: '✓ ', suffix: 'BM25 fusion    → RRF k=60', suffixType: 'normal' },
-  { delay: 2.4, type: 'key', text: '✓ ', suffix: 'BGE reranker   → top 10 results', suffixType: 'normal' },
-  { delay: 2.8, type: 'key', text: '✓ ', suffix: 'Roxan 48B      → answer generated', suffixType: 'string' },
-  { delay: 3.2, type: 'success', text: '  Latency: 312ms  ·  Tokens: 1,847  ·  Sources: 6' },
-];
+const WORDS = ['RAG Pipelines', 'Agent Networks', 'Knowledge Graphs', 'Fine-Tuning', 'Multi-Tenancy'];
 
-function TerminalLine({ line, index }) {
-  const [visible, setVisible] = useState(false);
+function RotatingWord() {
+  const [index, setIndex] = React.useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), line.delay * 1000);
-    return () => clearTimeout(t);
-  }, [line.delay]);
-
-  if (!visible) return null;
-
-  const colorMap = {
-    prompt: 'landing-terminal-prompt',
-    comment: 'landing-terminal-comment',
-    key: 'landing-terminal-key',
-    string: 'landing-terminal-string',
-    normal: '',
-    success: 'landing-terminal-success',
-  };
+    const t = setInterval(() => setIndex((i) => (i + 1) % WORDS.length), 2200);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -4 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.2 }}
-      className={`${colorMap[line.type] || ''}`}
-    >
-      {line.type === 'prompt' && <span className="landing-terminal-comment mr-2">$</span>}
-      <span>{line.text}</span>
-      {line.suffix && (
-        <span className={colorMap[line.suffixType] || ''}>{line.suffix}</span>
-      )}
-    </motion.div>
+    <span className="relative inline-block overflow-hidden" style={{ minWidth: '14ch' }}>
+      <motion.span
+        key={index}
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -40, opacity: 0 }}
+        transition={{ duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="inline-block text-primary"
+      >
+        {WORDS[index]}
+      </motion.span>
+    </span>
   );
 }
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94], delay: i * 0.1 },
-  }),
-};
+const LOGOS = [
+  { name: 'FastAPI', abbr: 'API' },
+  { name: 'Qdrant', abbr: 'QD' },
+  { name: 'OpenAI', abbr: 'OAI' },
+  { name: 'Rust', abbr: 'RS' },
+  { name: 'Postgres', abbr: 'PG' },
+  { name: 'Redis', abbr: 'RD' },
+  { name: 'Celery', abbr: 'CL' },
+  { name: 'Ollama', abbr: 'OL' },
+];
+
+const STATS = [
+  { value: '48B', label: 'Local Model' },
+  { value: '<10ms', label: 'Rerank P99' },
+  { value: '8', label: 'LLM Providers' },
+  { value: '27+', label: 'Data Sources' },
+];
+
+import React from 'react';
 
 export function HeroSection() {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
+  const opacity = useTransform(scrollYProgress, [0.5, 1], [1, 0]);
+
   return (
-    <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-      <div className="landing-grid-bg absolute inset-0 pointer-events-none" />
-      <div className="landing-radial-fade absolute inset-0 pointer-events-none" />
+    <section ref={containerRef} className="relative min-h-screen flex flex-col justify-center pt-16 overflow-hidden bg-background">
+      <div className="absolute inset-0 pointer-events-none select-none">
+        <div className="absolute inset-0 landing-grid-bg opacity-40" />
+        <div
+          className="absolute left-1/2 top-0 -translate-x-1/2 h-[600px] w-[900px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(ellipse, hsl(var(--primary)) 0%, transparent 70%)', filter: 'blur(40px)' }}
+        />
+        <div
+          className="absolute right-0 bottom-1/3 h-[400px] w-[400px] rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(ellipse, hsl(280 65% 60%) 0%, transparent 70%)', filter: 'blur(60px)' }}
+        />
+      </div>
 
-      <div className="landing-container landing-section relative z-10">
-        <div className="flex flex-col items-center text-center gap-6 max-w-4xl mx-auto">
-          <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0}>
-            <span className="landing-badge">
-              <Zap className="h-3 w-3" />
-              Now in active development — Beta approaching
-            </span>
-          </motion.div>
+      <motion.div style={{ y, opacity }} className="landing-container px-4 sm:px-6 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 min-h-[calc(100vh-4rem)] py-16 lg:py-0 lg:min-h-0">
 
-          <motion.h1
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={1}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08]"
-          >
-            The AI infrastructure
-            <br />
-            <span className="landing-gradient-text">platform for what</span>
-            <br />
-            comes next.
-          </motion.h1>
+          <div className="flex-1 flex flex-col gap-8 text-center lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 self-center lg:self-start rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              Active development · Beta approaching
+            </motion.div>
 
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={2}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed"
-          >
-            NeuralCore unifies RAG, Agentic AI, Multi-Agent Orchestration, Knowledge Graphs,
-            Fine-Tuning, and Enterprise Multi-Tenancy into one production-grade platform — so you
-            ship AI products, not glue code.
-          </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <h1 className="text-[2.75rem] sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-bold tracking-[-0.03em] leading-[1.06] text-foreground">
+                Production AI infra
+                <br className="hidden sm:block" />
+                {' '}for teams that
+                <br />
+                <RotatingWord />
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0">
+                One platform — RAG, agents, knowledge graphs, fine-tuning, multi-tenancy.
+                Deploy in minutes. Scale to enterprise.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.38 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+            >
+              <Link
+                href={ROUTES.SIGNUP}
+                className="group inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:opacity-92 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                Start building free
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <a
+                href="https://github.com/sambhavdwivediofficial/NeuralCore"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Github className="h-3.5 w-3.5" />
+                View source
+              </a>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.55 }}
+              className="flex items-center justify-center lg:justify-start gap-6"
+            >
+              {STATS.map((s) => (
+                <div key={s.label} className="flex flex-col items-center lg:items-start gap-0.5">
+                  <span className="text-lg font-bold tracking-tight text-foreground font-mono">{s.value}</span>
+                  <span className="text-[0.6875rem] text-muted-foreground uppercase tracking-wide">{s.label}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
 
           <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={3}
-            className="flex flex-col sm:flex-row items-center gap-3"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="flex-1 w-full max-w-md lg:max-w-none"
           >
-            <Link
-              href={ROUTES.SIGNUP}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 hover:scale-[1.02] landing-glow"
-            >
-              Start building free <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href="https://github.com/sambhavdwivediofficial/NeuralCore"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              <Github className="h-4 w-4" /> View on GitHub
-            </a>
-          </motion.div>
+            <div className="relative">
+              <div
+                className="absolute -inset-4 rounded-2xl opacity-30 blur-2xl pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, hsl(var(--primary) / 0.4) 0%, transparent 70%)' }}
+              />
 
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={4}
-            className="w-full max-w-2xl mt-4"
-          >
-            <div className="landing-terminal landing-glow">
-              <div className="landing-terminal-bar">
-                <div className="landing-terminal-dot bg-[#ff5f57]" />
-                <div className="landing-terminal-dot bg-[#febc2e]" />
-                <div className="landing-terminal-dot bg-[#28c840]" />
-                <span className="ml-2 text-[0.6875rem] text-muted-foreground">neuralcore — zsh</span>
+              <div className="relative rounded-xl border border-border bg-card overflow-hidden shadow-2xl shadow-black/10">
+                <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-muted/30">
+                  <div className="flex gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+                  </div>
+                  <span className="text-[0.6875rem] text-muted-foreground font-mono">agentic_rag_pipeline.py</span>
+                  <div className="w-12" />
+                </div>
+
+                <div className="p-5 font-mono text-[0.75rem] leading-relaxed overflow-hidden">
+                  <div className="flex flex-col gap-0.5">
+                    {[
+                      { t: 'comment', c: '# Initialize the NeuralCore client' },
+                      { t: 'kw', c: 'from', rest: ' neuralcore import NeuralCore' },
+                      { t: 'blank' },
+                      { t: 'kw', c: 'client', rest: ' = NeuralCore(api_key=', end: '"nc_...")', endT: 'str' },
+                      { t: 'blank' },
+                      { t: 'comment', c: '# Run agentic RAG pipeline' },
+                      { t: 'kw', c: 'result', rest: ' = client.pipelines.run(' },
+                      { t: 'indent', c: '    query=', str: '"What is our Q3 revenue?",' },
+                      { t: 'indent', c: '    knowledge_base_id=', str: '"kb_finance_2026",' },
+                      { t: 'indent', c: '    pipeline_type=', str: '"agentic_rag",' },
+                      { t: 'indent', c: '    agent_ids=[', str: '"agent_research"', end: '],' },
+                      { t: 'close', c: ')' },
+                      { t: 'blank' },
+                      { t: 'comment', c: '# Streamed answer + cited sources' },
+                      { t: 'kw', c: 'print', rest: '(result.answer)' },
+                      { t: 'kw', c: 'print', rest: '(result.sources)' },
+                    ].map((line, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.25, delay: 0.6 + i * 0.04 }}
+                      >
+                        {line.t === 'blank' && <div className="h-3" />}
+                        {line.t === 'comment' && (
+                          <span className="text-muted-foreground/60">{line.c}</span>
+                        )}
+                        {(line.t === 'kw' || line.t === 'indent') && (
+                          <span>
+                            <span className="text-warning">{line.c}</span>
+                            {line.rest && <span className="text-foreground/80">{line.rest}</span>}
+                            {line.str && <span className="text-success">{line.str}</span>}
+                            {line.end && <span className={line.endT === 'str' ? 'text-success' : 'text-foreground/80'}>{line.end}</span>}
+                          </span>
+                        )}
+                        {line.t === 'close' && <span className="text-foreground/80">{line.c}</span>}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 1.5 }}
+                  className="border-t border-border bg-success/5 px-5 py-3 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                    <span className="text-[0.6875rem] text-success font-medium">Pipeline completed</span>
+                  </div>
+                  <span className="text-[0.6875rem] text-muted-foreground font-mono">312ms · 6 sources</span>
+                </motion.div>
               </div>
-              <div className="landing-terminal-body min-h-[9rem] flex flex-col gap-0.5">
-                {TERMINAL_LINES.map((line, i) => (
-                  <TerminalLine key={i} line={line} index={i} />
+
+              <div className="mt-4 grid grid-cols-4 gap-2">
+                {LOGOS.map((l, i) => (
+                  <motion.div
+                    key={l.name}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.9 + i * 0.05 }}
+                    className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5"
+                  >
+                    <span className="text-[0.625rem] font-bold text-primary font-mono">{l.abbr}</span>
+                    <span className="text-[0.625rem] text-muted-foreground hidden sm:inline">{l.name}</span>
+                  </motion.div>
                 ))}
               </div>
             </div>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.8, duration: 0.8 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
+      >
+        <span className="text-[0.625rem] uppercase tracking-widest text-muted-foreground/50">Scroll</span>
+        <motion.div
+          animate={{ y: [0, 5, 0] }}
+          transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+          className="h-4 w-px bg-gradient-to-b from-muted-foreground/40 to-transparent"
+        />
+      </motion.div>
     </section>
   );
 }
