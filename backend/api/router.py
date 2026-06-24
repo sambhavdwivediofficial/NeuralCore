@@ -1,4 +1,4 @@
-# api/router.py
+# backend/api/router.py
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -27,16 +27,26 @@ from api.routes import (
     workspaces,
     voice,
     vision,
+    auth_signup,
+    auth_oauth,
+    project_members,
+    kb_documents,
+    kb_chunks,
 )
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(auth_signup.router, prefix="/auth", tags=["Account & Recovery"])
+api_router.include_router(auth_oauth.router, prefix="/auth", tags=["OAuth"])
 api_router.include_router(users.router, prefix="/auth", tags=["Users & Team"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
+api_router.include_router(project_members.router, prefix="/projects", tags=["Project Members"])
 api_router.include_router(agents.router, prefix="/agents", tags=["Agents"])
 api_router.include_router(memory.router, prefix="/agents", tags=["Agent Memory"])
 api_router.include_router(knowledgebases.router, prefix="/knowledge-bases", tags=["Knowledge Bases"])
+api_router.include_router(kb_documents.router, prefix="/knowledge-bases", tags=["KB Documents"])
+api_router.include_router(kb_chunks.router, prefix="/knowledge-bases", tags=["KB Chunks"])
 api_router.include_router(ingestion.router, tags=["Ingestion"])
 api_router.include_router(embeddings.router, prefix="/embeddings", tags=["Embeddings"])
 api_router.include_router(retrieval.router, prefix="/retrieval", tags=["Retrieval"])
