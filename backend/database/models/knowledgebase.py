@@ -140,4 +140,3 @@ class Chunk(Base, UUIDMixin, TimestampMixin):
 
     knowledge_base: Mapped["KnowledgeBase"] = relationship(back_populates="chunks")
     document: Mapped["Document"] = relationship(back_populates="chunks")
-    

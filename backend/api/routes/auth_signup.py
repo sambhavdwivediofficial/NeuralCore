@@ -10,8 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import CurrentUser, get_app_settings, get_db
-from auth.jwt import create_access_token, create_refresh_token
-from auth.password import get_password_hash, validate_password_strength
+from auth.jwt import create_access_token
+from auth.password import hash_password, validate_password_strength
+from auth.validators import ValidationError
 from database.models.user import User
 from services.email_service import (
     send_invite_email,
@@ -19,9 +20,7 @@ from services.email_service import (
     send_verification_email,
 )
 from services.invite_service import (
-    OrganizationInvite,
     consume_invite,
-    create_invite,
     get_invite_by_token,
     get_invite_detail,
 )
@@ -52,14 +51,6 @@ class SignupRequest(BaseModel):
             raise ValueError("Name cannot be empty")
         return v
 
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v: str) -> str:
-        errors = validate_password_strength(v)
-        if errors:
-            raise ValueError(errors[0])
-        return v
-
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
@@ -68,14 +59,6 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
-
-    @field_validator("new_password")
-    @classmethod
-    def password_strength(cls, v: str) -> str:
-        errors = validate_password_strength(v)
-        if errors:
-            raise ValueError(errors[0])
-        return v
 
 
 class VerifyEmailRequest(BaseModel):
@@ -93,14 +76,6 @@ class AcceptInviteRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("Name cannot be empty")
-        return v
-
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v: str) -> str:
-        errors = validate_password_strength(v)
-        if errors:
-            raise ValueError(errors[0])
         return v
 
 
@@ -137,6 +112,17 @@ async def _login_user(response: Response, user: User) -> dict:
     return _user_response(user)
 
 
+def _validate_password(password: str) -> None:
+    settings = get_settings()
+    try:
+        validate_password_strength(password, settings)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+
+
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(
     payload: SignupRequest,
@@ -144,6 +130,8 @@ async def signup(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    _validate_password(payload.password)
+
     existing = await db.execute(select(User).where(User.email == payload.email))
     if existing.scalar_one_or_none():
         raise HTTPException(
@@ -151,7 +139,8 @@ async def signup(
             detail="Email already registered",
         )
 
-    hashed_pw = get_password_hash(payload.password)
+    settings = get_settings()
+    hashed_pw = hash_password(payload.password, settings)
 
     org_id: Optional[uuid.UUID] = None
     if payload.organization_name:
@@ -222,6 +211,8 @@ async def reset_password(
     payload: ResetPasswordRequest,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    _validate_password(payload.new_password)
+
     user = await verify_password_reset_token(db, payload.token)
     if not user:
         raise HTTPException(
@@ -229,7 +220,8 @@ async def reset_password(
             detail="Invalid or expired token",
         )
 
-    user.hashed_password = get_password_hash(payload.new_password)
+    settings = get_settings()
+    user.hashed_password = hash_password(payload.new_password, settings)
     user.failed_login_attempts = 0
     user.locked_until = None
     await consume_password_reset_token(db, user)
@@ -241,18 +233,15 @@ async def reset_password(
 @router.post("/verify-email/request", status_code=status.HTTP_200_OK)
 async def request_email_verification(
     background_tasks: BackgroundTasks,
+    user: CurrentUser,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(CurrentUser.__class__),
 ) -> dict:
-    if current_user.is_verified:
+    if user.is_verified:
         return {"message": "Email already verified"}
 
-    raw_token = await create_email_verification_token(db, current_user)
+    raw_token = await create_email_verification_token(db, user)
     background_tasks.add_task(
-        send_verification_email,
-        current_user.email,
-        current_user.full_name,
-        raw_token,
+        send_verification_email, user.email, user.full_name, raw_token
     )
     return {"message": "Verification email sent"}
 
@@ -292,6 +281,8 @@ async def accept_invite(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    _validate_password(payload.password)
+
     invite = await get_invite_by_token(db, payload.token)
     if not invite:
         raise HTTPException(
@@ -306,7 +297,9 @@ async def accept_invite(
             detail="An account with this email already exists. Please log in.",
         )
 
-    hashed_pw = get_password_hash(payload.password)
+    settings = get_settings()
+    hashed_pw = hash_password(payload.password, settings)
+
     user = User(
         email=invite.email,
         full_name=payload.name.strip(),
