@@ -2,20 +2,19 @@
 from __future__ import annotations
 
 import secrets
-import uuid
 from typing import Optional
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.jwt import create_access_token, set_auth_cookie
+from api.dependencies import get_db
+from auth.jwt import create_access_token
 from database.models.user import User
-from database.session import get_db
-from settings import Role, settings
+from settings import Role, get_settings
 
 router = APIRouter()
 
@@ -45,39 +44,40 @@ PROVIDERS = {
 
 
 def _get_client_id(provider: str) -> str:
+    settings = get_settings()
     mapping = {
-        "google": settings.GOOGLE_CLIENT_ID,
-        "github": settings.GITHUB_CLIENT_ID,
-        "microsoft": settings.MICROSOFT_CLIENT_ID,
+        "google": settings.auth.oauth.google.client_id,
+        "github": settings.auth.oauth.github.client_id,
+        "microsoft": settings.auth.oauth.microsoft.client_id,
     }
     return mapping[provider]
 
 
 def _get_client_secret(provider: str) -> str:
+    settings = get_settings()
     mapping = {
-        "google": settings.GOOGLE_CLIENT_SECRET,
-        "github": settings.GITHUB_CLIENT_SECRET,
-        "microsoft": settings.MICROSOFT_CLIENT_SECRET,
+        "google": settings.auth.oauth.google.client_secret.get_secret_value(),
+        "github": settings.auth.oauth.github.client_secret.get_secret_value(),
+        "microsoft": settings.auth.oauth.microsoft.client_secret.get_secret_value(),
     }
     return mapping[provider]
 
 
 def _get_redirect_uri(provider: str) -> str:
-    return f"{settings.API_URL}/api/v1/auth/oauth/{provider}/callback"
+    settings = get_settings()
+    return f"{settings.app.api_url}/api/v1/auth/oauth/{provider}/callback"
 
 
-def _build_user_response(user: User) -> dict:
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "name": user.full_name,
-        "role": user.role.value if hasattr(user.role, "value") else str(user.role),
-        "tenant_id": str(user.organization_id) if user.organization_id else None,
-        "avatar_url": user.metadata_.get("avatar_url") if user.metadata_ else None,
-        "is_verified": user.is_verified,
-        "mfa_enabled": user.mfa_enabled,
-        "created_at": user.created_at.isoformat() if hasattr(user, "created_at") else None,
-    }
+def _set_auth_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key="nc_access_token",
+        value=token,
+        httponly=False,
+        secure=False,
+        samesite="lax",
+        path="/",
+        max_age=60 * 15,
+    )
 
 
 async def _upsert_oauth_user(
@@ -88,6 +88,8 @@ async def _upsert_oauth_user(
     full_name: str,
     avatar_url: Optional[str],
 ) -> User:
+    from datetime import datetime, timezone
+
     result = await db.execute(
         select(User).where(
             User.oauth_provider == provider,
@@ -97,7 +99,7 @@ async def _upsert_oauth_user(
     user = result.scalar_one_or_none()
 
     if user:
-        user.last_login_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        user.last_login_at = datetime.now(timezone.utc)
         if avatar_url and user.metadata_:
             user.metadata_["avatar_url"] = avatar_url
         await db.commit()
@@ -110,7 +112,7 @@ async def _upsert_oauth_user(
         existing.oauth_provider = provider
         existing.oauth_subject = oauth_subject
         existing.is_verified = True
-        if avatar_url:
+        if avatar_url and existing.metadata_ is not None:
             existing.metadata_["avatar_url"] = avatar_url
         await db.commit()
         await db.refresh(existing)
@@ -193,7 +195,9 @@ async def _exchange_code_github(code: str, redirect_uri: str) -> dict:
             emails_resp = await client.get(PROVIDERS["github"]["emails_url"], headers=headers)
             emails_resp.raise_for_status()
             emails = emails_resp.json()
-            primary = next((e for e in emails if e.get("primary") and e.get("verified")), None)
+            primary = next(
+                (e for e in emails if e.get("primary") and e.get("verified")), None
+            )
             if not primary:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -233,12 +237,10 @@ async def _exchange_code_microsoft(code: str, redirect_uri: str) -> dict:
         info = graph_resp.json()
 
     email = info.get("mail") or info.get("userPrincipalName", "")
-    display_name = info.get("displayName", email.split("@")[0])
-
     return {
         "sub": info["id"],
         "email": email,
-        "name": display_name,
+        "name": info.get("displayName", email.split("@")[0]),
         "avatar_url": None,
     }
 
@@ -251,10 +253,7 @@ _EXCHANGE_HANDLERS = {
 
 
 @router.get("/oauth/{provider}")
-async def oauth_login(
-    provider: str,
-    request: Request,
-) -> RedirectResponse:
+async def oauth_login(provider: str) -> RedirectResponse:
     if provider not in PROVIDERS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -264,12 +263,10 @@ async def oauth_login(
     state = secrets.token_urlsafe(32)
     _OAUTH_STATE_STORE[state] = provider
 
-    redirect_uri = _get_redirect_uri(provider)
     cfg = PROVIDERS[provider]
-
     params = {
         "client_id": _get_client_id(provider),
-        "redirect_uri": redirect_uri,
+        "redirect_uri": _get_redirect_uri(provider),
         "scope": cfg["scopes"],
         "state": state,
         "response_type": "code",
@@ -288,13 +285,13 @@ async def oauth_login(
 @router.get("/oauth/{provider}/callback")
 async def oauth_callback(
     provider: str,
-    response: Response,
     code: Optional[str] = Query(default=None),
     state: Optional[str] = Query(default=None),
     error: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> RedirectResponse:
-    app_url = settings.APP_URL
+    settings = get_settings()
+    app_url = settings.app.app_url
     error_base = f"{app_url}/auth/callback?status=error"
 
     if provider not in PROVIDERS:
@@ -324,10 +321,9 @@ async def oauth_callback(
         )
 
     try:
-        redirect_uri = _get_redirect_uri(provider)
         handler = _EXCHANGE_HANDLERS[provider]
-        user_info = await handler(code, redirect_uri)
-    except Exception as exc:
+        user_info = await handler(code, _get_redirect_uri(provider))
+    except Exception:
         return RedirectResponse(
             url=f"{error_base}&message=OAuth+authentication+failed",
             status_code=status.HTTP_302_FOUND,
@@ -342,22 +338,16 @@ async def oauth_callback(
             full_name=user_info["name"],
             avatar_url=user_info.get("avatar_url"),
         )
-    except Exception as exc:
+    except Exception:
         return RedirectResponse(
             url=f"{error_base}&message=Failed+to+create+user+account",
             status_code=status.HTTP_302_FOUND,
         )
 
-    token_data = {
-        "sub": str(user.id),
-        "role": user.role.value if hasattr(user.role, "value") else str(user.role),
-        "tenant_id": str(user.organization_id) if user.organization_id else None,
-    }
-    access_token = create_access_token(token_data)
-
+    token = create_access_token(user, settings)
     success_redirect = RedirectResponse(
         url=f"{app_url}/auth/callback?status=success",
         status_code=status.HTTP_302_FOUND,
     )
-    set_auth_cookie(success_redirect, access_token)
+    _set_auth_cookie(success_redirect, token)
     return success_redirect

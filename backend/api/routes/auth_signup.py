@@ -2,20 +2,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.jwt import create_access_token, set_auth_cookie
-from auth.password import get_password_hash, verify_password, validate_password_strength
+from api.dependencies import CurrentUser, get_app_settings, get_db
+from auth.jwt import create_access_token, create_refresh_token
+from auth.password import get_password_hash, validate_password_strength
 from database.models.user import User
-from database.session import get_db
-from dependencies import get_current_user
-from multitenancy.organizations.organization import Organization
 from services.email_service import (
     send_invite_email,
     send_password_reset_email,
@@ -36,7 +33,7 @@ from services.token_service import (
     verify_email_token,
     verify_password_reset_token,
 )
-from settings import Role, settings
+from settings import Role, get_settings
 
 router = APIRouter()
 
@@ -121,14 +118,22 @@ def _user_response(user: User) -> dict:
     }
 
 
+def _set_auth_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key="nc_access_token",
+        value=token,
+        httponly=False,
+        secure=False,
+        samesite="lax",
+        path="/",
+        max_age=60 * 15,
+    )
+
+
 async def _login_user(response: Response, user: User) -> dict:
-    token_data = {
-        "sub": str(user.id),
-        "role": user.role.value if hasattr(user.role, "value") else str(user.role),
-        "tenant_id": str(user.organization_id) if user.organization_id else None,
-    }
-    access_token = create_access_token(token_data)
-    set_auth_cookie(response, access_token)
+    settings = get_settings()
+    token = create_access_token(user, settings)
+    _set_auth_cookie(response, token)
     return _user_response(user)
 
 
@@ -150,6 +155,7 @@ async def signup(
 
     org_id: Optional[uuid.UUID] = None
     if payload.organization_name:
+        from multitenancy.organizations.organization import Organization
         org = Organization(
             name=payload.organization_name.strip(),
             slug=payload.organization_name.strip().lower().replace(" ", "-"),
@@ -236,7 +242,7 @@ async def reset_password(
 async def request_email_verification(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(CurrentUser.__class__),
 ) -> dict:
     if current_user.is_verified:
         return {"message": "Email already verified"}
