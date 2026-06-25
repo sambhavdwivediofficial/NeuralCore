@@ -107,6 +107,10 @@ services:
       WORKERS: "4"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      APP__CORS__ALLOW_ORIGINS: '["http://localhost:5242","https://neuralcore.sambhavdwivedi.in"]'
+      APP__CORS__ALLOW_CREDENTIALS: "true"
+      APP__CORS__ALLOW_METHODS: '["GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"]'
+      APP__CORS__ALLOW_HEADERS: '["Authorization","Content-Type","Accept","X-Request-ID","X-Tenant-ID","X-API-Key"]'
     ports:
       - "8000:8000"
       # - "9090:9090"
