@@ -7,6 +7,7 @@ import { AgentProvider } from '@/context/AgentContext';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { ToastProvider } from '@/components/common/Toast';
 import { TooltipProvider } from '@/components/common/Tooltip';
+import { TokenSync } from '@/components/common/TokenSync';
 import { APP_NAME } from '@/lib/constants';
 import '@/styles/globals.css';
 
@@ -70,6 +71,7 @@ export default function RootLayout({ children }) {
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
         <SettingsProvider>
           <AuthProvider>
+            <TokenSync />
             <ProjectProvider>
               <AgentProvider>
                 <TooltipProvider delayDuration={200}>

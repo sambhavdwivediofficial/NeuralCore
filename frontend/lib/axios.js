@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import { API_BASE_URL, API_PREFIX, AUTH_COOKIE_NAME } from '@/lib/constants';
+import { PUBLIC_ROUTES, PUBLIC_ROUTE_PREFIXES } from '@/lib/routes';
 
 function getCookie(name) {
   if (typeof document === 'undefined') return null;
@@ -10,7 +11,7 @@ function getCookie(name) {
 }
 
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}${API_PREFIX}`,
+  baseURL: '/api/v1',
   timeout: 30000,
   withCredentials: true,
   headers: {
@@ -27,6 +28,12 @@ apiClient.interceptors.request.use((config) => {
 });
 
 let refreshPromise = null;
+
+function isPublicPath(pathname) {
+  if (PUBLIC_ROUTES.includes(pathname)) return true;
+  if (PUBLIC_ROUTE_PREFIXES.some((p) => pathname.startsWith(p))) return true;
+  return false;
+}
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -45,8 +52,11 @@ apiClient.interceptors.response.use(
           })
           .catch((refreshError) => {
             refreshPromise = null;
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname;
+              if (!isPublicPath(currentPath)) {
+                window.location.href = '/';
+              }
             }
             throw refreshError;
           });

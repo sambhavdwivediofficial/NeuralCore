@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import * as authService from '@/services/auth';
 import { ROUTES } from '@/lib/routes';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
 import { toast } from '@/components/common/Toast';
 import { getErrorMessage } from '@/lib/axios';
 
@@ -21,11 +22,18 @@ export function useAuth() {
         router.push(ROUTES.LOGIN_MFA);
         return result;
       }
+      if (result.access_token) {
+        document.cookie = `${AUTH_COOKIE_NAME}=${result.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+        localStorage.setItem('nc_token', result.access_token);
+      }
       const dest = result.user?.tenant_id || result.tenant_id
         ? ROUTES.DASHBOARD
         : ROUTES.ONBOARDING;
-      router.push(dest);
+      window.location.href = dest;
       return result;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -38,30 +46,47 @@ export function useAuth() {
       if (!body.organization_name) delete body.organization_name;
       const data = await authService.signup(body);
       ctx.updateUser(data.user ?? data);
+      if (data.access_token) {
+        document.cookie = `${AUTH_COOKIE_NAME}=${data.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+        localStorage.setItem('nc_token', data.access_token);
+      }
       const dest = (data.user ?? data).tenant_id ? ROUTES.DASHBOARD : ROUTES.ONBOARDING;
-      router.push(dest);
+      window.location.href = dest;
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [ctx, router]);
+  }, [ctx]);
 
   const completeMfa = useCallback(async (code) => {
     setIsLoading(true);
     try {
       const data = await ctx.completeMfa(code);
+      if (data.access_token) {
+        document.cookie = `${AUTH_COOKIE_NAME}=${data.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+        localStorage.setItem('nc_token', data.access_token);
+      }
       const dest = (data.user ?? data).tenant_id ? ROUTES.DASHBOARD : ROUTES.ONBOARDING;
-      router.push(dest);
+      window.location.href = dest;
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [ctx, router]);
+  }, [ctx]);
 
   const forgotPassword = useCallback(async (email) => {
     setIsLoading(true);
     try {
       return await authService.forgotPassword(email);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +99,9 @@ export function useAuth() {
       toast.success('Password updated. Please sign in.');
       router.push(ROUTES.LOGIN);
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +113,9 @@ export function useAuth() {
       const data = await authService.verifyEmail(token);
       ctx.updateUser({ is_verified: true });
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -95,12 +126,19 @@ export function useAuth() {
     try {
       const data = await authService.acceptInvite({ token, ...payload });
       ctx.updateUser(data.user ?? data);
-      router.push(ROUTES.DASHBOARD);
+      if (data.access_token) {
+        document.cookie = `${AUTH_COOKIE_NAME}=${data.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+        localStorage.setItem('nc_token', data.access_token);
+      }
+      window.location.href = ROUTES.DASHBOARD;
       return data;
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [ctx, router]);
+  }, [ctx]);
 
   const updateProfile = useCallback(async (payload) => {
     setIsLoading(true);
