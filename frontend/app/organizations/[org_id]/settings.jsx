@@ -1,4 +1,4 @@
-﻿// frontend/app/organizations/[org_id]/settings.jsx
+// frontend/app/organizations/[org_id]/settings.jsx
 
 'use client';
 
@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Label } from '@/components/common/Label';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { organizationSchema } from '@/lib/validators';
 import { useOrganization } from '@/hooks/useOrganizations';
 import { useOrganizationContext } from '@/context/OrganizationContext';

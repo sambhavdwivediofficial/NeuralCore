@@ -1,4 +1,4 @@
-﻿// frontend/app/datasets/page.jsx
+// frontend/app/datasets/page.jsx
 
 'use client';
 
@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Database, Plus } from 'lucide-react';
 import { DatasetCard } from '@/components/datasets/DatasetCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { SearchBar } from '@/components/common/SearchBar';
 import { useDatasets } from '@/hooks/useDatasets';
 import { ROUTES } from '@/lib/routes';
@@ -31,7 +31,7 @@ export default function DatasetsPage() {
           <p className="text-xs text-muted-foreground">{datasets.length} fine-tuning dataset{datasets.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search datasets…" className="w-56" />
+          <SearchBar value={search} onChange={setSearch} placeholder="Search datasets�" className="w-56" />
           <Link href={ROUTES.DATASET_CREATE}
             className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
             <Plus className="h-3.5 w-3.5" /> New dataset
@@ -56,3 +56,4 @@ export default function DatasetsPage() {
     </div>
   );
 }
+

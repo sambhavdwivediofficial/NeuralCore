@@ -1,7 +1,7 @@
 // frontend/middleware.js
 
 import { NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { jwtVerify, importSPKI } from 'jose';
 import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
 const PUBLIC_ROUTES = [
@@ -19,19 +19,27 @@ const PUBLIC_ROUTES = [
   '/architecture',
 ];
 
-const PUBLIC_PREFIXES = [
-  '/reset-password/',
-  '/accept-invite/',
-];
+const PUBLIC_PREFIXES = ['/reset-password/', '/accept-invite/'];
+
+let _cachedKey = null;
+
+async function getVerifyKey() {
+  if (_cachedKey) return _cachedKey;
+  const secret = process.env.JWT_PUBLIC_SECRET || '';
+  if (secret.includes('BEGIN PUBLIC KEY')) {
+    _cachedKey = await importSPKI(secret, 'RS256');
+  } else {
+    _cachedKey = new TextEncoder().encode(
+      secret || 'neuralcore-dev-secret-key-min-32-characters-long'
+    );
+  }
+  return _cachedKey;
+}
 
 async function verifyToken(token) {
   try {
-    const secret = new TextEncoder().encode(
-      process.env.JWT_PUBLIC_SECRET || 'neuralcore-dev-secret-key-min-32-characters-long'
-    );
-    const { payload } = await jwtVerify(token, secret, {
-      algorithms: ['HS256', 'RS256'],
-    });
+    const key = await getVerifyKey();
+    const { payload } = await jwtVerify(token, key);
     return payload;
   } catch {
     return null;
@@ -62,7 +70,8 @@ export async function middleware(request) {
     if (token) {
       const payload = await verifyToken(token);
       if (payload) {
-        if (pathname === '/' || pathname === '/login' || pathname === '/signup') {
+        const authOnlyPages = ['/', '/login', '/signup', '/forgot-password', '/login/mfa'];
+        if (authOnlyPages.includes(pathname)) {
           const dest = payload.tenant_id ? '/dashboard' : '/onboarding';
           return NextResponse.redirect(new URL(dest, request.url));
         }
@@ -72,22 +81,18 @@ export async function middleware(request) {
   }
 
   if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   const payload = await verifyToken(token);
 
   if (!payload) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    const response = NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete(AUTH_COOKIE_NAME);
     return response;
   }
 
-  if (!payload.tenant_id && pathname !== '/onboarding') {
+  if (!payload.tenant_id && pathname !== '/onboarding' && payload.role !== 'super_admin') {
     return NextResponse.redirect(new URL('/onboarding', request.url));
   }
 

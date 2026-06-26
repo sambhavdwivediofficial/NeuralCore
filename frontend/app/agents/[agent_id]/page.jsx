@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Settings, History } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -28,21 +28,41 @@ const STATUS_VARIANT = {
   [AGENT_STATUS.IDLE]: 'muted',
 };
 
+const RESERVED_AGENT_IDS = ['create', 'new', 'edit', 'settings', 'delete'];
+
 export default function AgentDetailPage({ params }) {
   const router = useRouter();
-  const { agent, isLoading } = useAgent(params.agent_id);
-  const { runs, isLoading: runsLoading } = useAgentRuns(params.agent_id, { page_size: 10 });
+  const { agent_id } = use(params);
+
+  if (RESERVED_AGENT_IDS.includes(agent_id)) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center gap-4 py-20">
+          <h1 className="text-lg font-semibold">Invalid agent ID</h1>
+          <p className="text-sm text-muted-foreground">
+            &quot;{agent_id}&quot; is a reserved word and cannot be used as an agent ID.
+          </p>
+          <Button onClick={() => router.push(ROUTES.AGENTS)}>
+            Back to Agents
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
+  const { agent, isLoading } = useAgent(agent_id);
+  const { runs, isLoading: runsLoading } = useAgentRuns(agent_id, { page_size: 10 });
   const [selectedRunLogs, setSelectedRunLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
 
   useEffect(() => {
     if (runs.length === 0) return;
     setLogsLoading(true);
-    getAgentLogs(params.agent_id, runs[0].id, { page_size: 100 })
+    getAgentLogs(agent_id, runs[0].id, { page_size: 100 })
       .then((data) => setSelectedRunLogs(data?.items || []))
       .catch(() => setSelectedRunLogs([]))
       .finally(() => setLogsLoading(false));
-  }, [runs, params.agent_id]);
+  }, [runs, agent_id]);
 
   if (isLoading) {
     return (
@@ -79,7 +99,7 @@ export default function AgentDetailPage({ params }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(ROUTES.AGENT_SETTINGS(params.agent_id))}
+            onClick={() => router.push(ROUTES.AGENT_SETTINGS(agent_id))}
           >
             <Settings className="h-3.5 w-3.5" />
             Settings
@@ -96,7 +116,7 @@ export default function AgentDetailPage({ params }) {
           <TabsContent value="run">
             <Card>
               <CardContent className="p-4">
-                <AgentRunner agentId={params.agent_id} />
+                <AgentRunner agentId={agent_id} />
               </CardContent>
             </Card>
           </TabsContent>

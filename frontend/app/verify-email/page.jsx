@@ -1,4 +1,4 @@
-﻿// frontend/app/verify-email/page.jsx
+// frontend/app/verify-email/page.jsx
 
 'use client';
 
@@ -8,7 +8,7 @@ import { CheckCircle2, XCircle, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { Button } from '@/components/common/Button';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { useAuth } from '@/hooks/useAuth';
 import { requestVerifyEmail } from '@/services/auth';
 import { getErrorMessage } from '@/lib/axios';
@@ -105,3 +105,4 @@ export default function VerifyEmailPage() {
     </AuthCard>
   );
 }
+

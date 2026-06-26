@@ -5,6 +5,12 @@ import * as agentsService from '@/services/agents';
 import { getErrorMessage } from '@/lib/axios';
 import { POLLING_INTERVALS } from '@/lib/constants';
 
+function isValidUUID(str) {
+  if (!str || typeof str !== 'string') return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 export function useAgents(params) {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +27,7 @@ export function useAgents(params) {
     } finally {
       setIsLoading(false);
     }
-  }, [JSON.stringify(params)]);
+  }, [params?.project_id, params?.search, params?.type, params?.page, params?.page_size]);
 
   useEffect(() => {
     fetchAgents();
@@ -42,7 +48,11 @@ export function useAgent(agentId) {
   const [error, setError] = useState(null);
 
   const fetchAgent = useCallback(async () => {
-    if (!agentId) return;
+    if (!agentId || !isValidUUID(agentId)) {
+      setIsLoading(false);
+      setError('Invalid agent ID');
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await agentsService.getAgent(agentId);
@@ -75,7 +85,11 @@ export function useAgentRuns(agentId, params) {
   const [error, setError] = useState(null);
 
   const fetchRuns = useCallback(async () => {
-    if (!agentId) return;
+    if (!agentId || !isValidUUID(agentId)) {
+      setIsLoading(false);
+      setError('Invalid agent ID');
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await agentsService.getAgentRuns(agentId, params);
@@ -86,7 +100,7 @@ export function useAgentRuns(agentId, params) {
     } finally {
       setIsLoading(false);
     }
-  }, [agentId, JSON.stringify(params)]);
+  }, [agentId, params?.page, params?.page_size]);
 
   useEffect(() => {
     fetchRuns();

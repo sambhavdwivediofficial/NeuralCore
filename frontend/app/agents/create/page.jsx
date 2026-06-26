@@ -1,13 +1,14 @@
-// app/agents/create.jsx
+// app/agents/create/page.jsx
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bot } from 'lucide-react';
+import { ArrowLeft, Bot, AlertCircle } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/common/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
+import { Badge } from '@/components/common/Badge';
 import { AgentConfig } from '@/components/agents/AgentConfig';
 import { useAvailableTools } from '@/hooks/useAgents';
 import { useProjectContext } from '@/context/ProjectContext';
@@ -21,12 +22,12 @@ import { AGENT_TYPES, LLM_PROVIDERS } from '@/lib/constants';
 const DEFAULT_VALUES = {
   name: '',
   description: '',
-  type: AGENT_TYPES.RETRIEVAL,
-  llmProvider: LLM_PROVIDERS.OPENAI,
-  model: '',
-  systemPrompt: '',
-  temperature: 0.7,
-  maxTokens: 4096,
+  agent_type: AGENT_TYPES.RETRIEVAL,
+  project_id: '',
+  model_provider: LLM_PROVIDERS.OPENAI,
+  model_name: '',
+  system_prompt: '',
+  max_iterations: 5,
   tools: [],
 };
 
@@ -34,9 +35,19 @@ export default function CreateAgentPage() {
   const router = useRouter();
   const { activeProjectId } = useProjectContext();
   const { tools } = useAvailableTools();
-  const [values, setValues] = useState(DEFAULT_VALUES);
+  const [values, setValues] = useState({
+    ...DEFAULT_VALUES,
+    project_id: activeProjectId || '',
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update project_id when activeProjectId becomes available
+  useEffect(() => {
+    if (activeProjectId) {
+      setValues((prev) => ({ ...prev, project_id: activeProjectId }));
+    }
+  }, [activeProjectId]);
 
   const handleSubmit = async () => {
     const result = agentSchema.safeParse(values);
@@ -47,24 +58,18 @@ export default function CreateAgentPage() {
         fieldErrors[issue.path[0]] = issue.message;
       });
       setErrors(fieldErrors);
+
+      // Show toast for project_id error since it's not in the form
+      if (fieldErrors.project_id) {
+        toast.error(fieldErrors.project_id);
+      }
       return;
     }
 
     setErrors({});
     setIsSubmitting(true);
     try {
-      const agent = await createAgent({
-        project_id: activeProjectId,
-        name: values.name,
-        description: values.description,
-        type: values.type,
-        llm_provider: values.llmProvider,
-        model: values.model,
-        system_prompt: values.systemPrompt,
-        temperature: values.temperature,
-        max_tokens: values.maxTokens,
-        tools: values.tools,
-      });
+      const agent = await createAgent(values);
       toast.success('Agent created');
       router.push(ROUTES.AGENT_DETAIL(agent.id));
     } catch (error) {
@@ -73,6 +78,35 @@ export default function CreateAgentPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show warning if no project selected
+  if (!activeProjectId) {
+    return (
+      <AppShell>
+        <div className="mx-auto flex max-w-2xl flex-col gap-5">
+          <Button variant="ghost" size="sm" className="w-fit" onClick={() => router.back()}>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back
+          </Button>
+
+          <Card>
+            <CardContent className="flex flex-col items-center gap-4 py-12">
+              <AlertCircle className="h-8 w-8 text-warning" />
+              <div className="text-center">
+                <h2 className="text-lg font-semibold">No project selected</h2>
+                <p className="text-sm text-muted-foreground">
+                  Please select or create a project before creating an agent.
+                </p>
+              </div>
+              <Button onClick={() => router.push(ROUTES.PROJECTS)}>
+                Go to Projects
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -93,7 +127,20 @@ export default function CreateAgentPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <AgentConfig values={values} errors={errors} onChange={setValues} tools={tools} />
+            <AgentConfig 
+              values={values} 
+              errors={errors} 
+              onChange={setValues} 
+              tools={tools} 
+            />
+
+            {errors.project_id && (
+              <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                {errors.project_id}
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel

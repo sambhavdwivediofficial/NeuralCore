@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -37,7 +37,8 @@ const MEMORY_LAYERS = ['short_term', 'long_term', 'semantic', 'episodic', 'sessi
 
 export default function AgentSettingsPage({ params }) {
   const router = useRouter();
-  const { agent, isLoading, refresh } = useAgent(params.agent_id);
+  const { agent_id } = use(params);
+  const { agent, isLoading, refresh } = useAgent(agent_id);
   const { tools } = useAvailableTools();
   const [values, setValues] = useState(null);
   const [errors, setErrors] = useState({});
@@ -75,7 +76,7 @@ export default function AgentSettingsPage({ params }) {
     setErrors({});
     setIsSaving(true);
     try {
-      await updateAgent(params.agent_id, {
+      await updateAgent(agent_id, {
         name: values.name,
         description: values.description,
         type: values.type,
@@ -98,7 +99,7 @@ export default function AgentSettingsPage({ params }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteAgent(params.agent_id);
+      await deleteAgent(agent_id);
       toast.success('Agent deleted');
       router.push(ROUTES.AGENTS);
     } catch (error) {
@@ -110,7 +111,7 @@ export default function AgentSettingsPage({ params }) {
 
   const handleClearMemory = async (layer) => {
     try {
-      await clearAgentMemory(params.agent_id, layer);
+      await clearAgentMemory(agent_id, layer);
       toast.success(`${layer.replace('_', ' ')} memory cleared`);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -132,7 +133,7 @@ export default function AgentSettingsPage({ params }) {
           variant="ghost"
           size="sm"
           className="-ml-2 w-fit"
-          onClick={() => router.push(ROUTES.AGENT_DETAIL(params.agent_id))}
+          onClick={() => router.push(ROUTES.AGENT_DETAIL(agent_id))}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {agent?.name}

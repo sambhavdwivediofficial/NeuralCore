@@ -1,4 +1,4 @@
-ï»¿// frontend/app/workflows/[workflow_id]/page.jsx
+// frontend/app/workflows/[workflow_id]/page.jsx
 
 'use client';
 
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { WorkflowCanvas } from '@/components/workflows/WorkflowCanvas';
 import { Tabs } from '@/components/common/Tabs';
 import { Button } from '@/components/common/Button';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { useWorkflow } from '@/hooks/useWorkflows';
 import { ROUTES } from '@/lib/routes';
 import { cn } from '@/lib/utils';
@@ -45,7 +45,7 @@ export default function WorkflowDetailPage() {
           </Link>
           <div className="flex flex-col">
             <h1 className="text-base font-semibold text-foreground">{workflow.name}</h1>
-            <p className="text-xs text-muted-foreground capitalize">{workflow.template ?? 'custom'} Â· {runs.length} runs</p>
+            <p className="text-xs text-muted-foreground capitalize">{workflow.template ?? 'custom'} · {runs.length} runs</p>
           </div>
         </div>
         <Button onClick={() => run({})} isLoading={runLoading} className="gap-1.5 self-start sm:self-auto">
@@ -73,7 +73,7 @@ export default function WorkflowDetailPage() {
                 <div key={r.id} className="workflow-step-row justify-between">
                   <div className="flex items-center gap-2.5">
                     <Icon className={cn('h-4 w-4 flex-shrink-0', conf.class)} />
-                    <span className="text-xs font-mono text-muted-foreground">{r.id?.slice(0, 8)}â€¦</span>
+                    <span className="text-xs font-mono text-muted-foreground">{r.id?.slice(0, 8)}…</span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="capitalize">{r.status}</span>

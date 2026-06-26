@@ -1,10 +1,10 @@
-﻿// frontend/app/plugins/page.jsx
+// frontend/app/plugins/page.jsx
 
 'use client';
 
 import { Puzzle } from 'lucide-react';
 import { PluginCard } from '@/components/plugins/PluginCard';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { usePlugins } from '@/hooks/usePlugins';
 
@@ -43,3 +43,4 @@ export default function PluginsPage() {
     </div>
   );
 }
+

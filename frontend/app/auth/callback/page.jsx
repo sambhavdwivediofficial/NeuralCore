@@ -1,4 +1,4 @@
-﻿// frontend/app/auth/callback/page.jsx
+// frontend/app/auth/callback/page.jsx
 
 'use client';
 
@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { Button } from '@/components/common/Button';
 import { useAuthContext } from '@/context/AuthContext';
 import { ROUTES } from '@/lib/routes';
@@ -54,7 +54,8 @@ export default function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4">
       <Loader size="lg" />
-      <p className="text-sm text-muted-foreground">Completing sign in…</p>
+      <p className="text-sm text-muted-foreground">Completing sign in�</p>
     </div>
   );
 }
+

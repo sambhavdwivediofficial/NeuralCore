@@ -1,11 +1,11 @@
-ï»¿// frontend/app/admin/organizations.jsx
+// frontend/app/admin/organizations.jsx
 
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Users, Calendar, Search } from 'lucide-react';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SearchBar } from '@/components/common/SearchBar';
 import { useAdminOrganizations } from '@/hooks/useAdmin';
@@ -44,7 +44,7 @@ export default function AdminOrganizationsPage() {
             <p className="text-xs text-muted-foreground">{organizations.length} organizations on platform</p>
           </div>
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search by name or emailâ€¦" className="w-64" />
+        <SearchBar value={search} onChange={setSearch} placeholder="Search by name or email…" className="w-64" />
       </div>
 
       {filtered.length === 0 ? (
@@ -90,7 +90,7 @@ export default function AdminOrganizationsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
-                      {org.created_at ? new Date(org.created_at).toLocaleDateString() : 'â€”'}
+                      {org.created_at ? new Date(org.created_at).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
@@ -108,3 +108,4 @@ export default function AdminOrganizationsPage() {
     </div>
   );
 }
+

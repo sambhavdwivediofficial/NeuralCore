@@ -8,7 +8,7 @@ import { BookOpen, ChevronRight } from 'lucide-react';
 import { ChatWindow } from '@/components/chat/ChatWindow';
 import { useKnowledgeBases } from '@/hooks/useKnowledgeBases';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader } from '@/components/common/Loader';
 import { ROUTES } from '@/lib/routes';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ export default function ChatPage() {
   const [selectedKb, setSelectedKb] = useState(null);
 
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center"><Loader size="lg" /></div>;
+    return <div className="flex h-full items-center justify-center"><PageLoader /></div>;
   }
 
   return (

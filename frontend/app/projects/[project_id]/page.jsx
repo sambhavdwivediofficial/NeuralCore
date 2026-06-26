@@ -2,6 +2,7 @@
 
 'use client';
 
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -36,13 +37,17 @@ const AGENT_STATUS_VARIANT = {
 
 export default function ProjectDetailPage({ params }) {
   const router = useRouter();
-  const { project, isLoading } = useProject(params.project_id);
+
+  // FIX: Unwrap params Promise using React.use()
+  const { project_id } = use(params);
+
+  const { project, isLoading } = useProject(project_id);
   const { knowledgeBases, isLoading: kbLoading } = useKnowledgeBases({
-    project_id: params.project_id,
+    project_id: project_id,
     page_size: 4,
   });
   const { agents, isLoading: agentsLoading } = useAgents({
-    project_id: params.project_id,
+    project_id: project_id,
     page_size: 4,
   });
 
@@ -88,7 +93,7 @@ export default function ProjectDetailPage({ params }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(ROUTES.PROJECT_ANALYTICS(params.project_id))}
+              onClick={() => router.push(ROUTES.PROJECT_ANALYTICS(project_id))}
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Analytics
@@ -96,7 +101,7 @@ export default function ProjectDetailPage({ params }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(ROUTES.PROJECT_SETTINGS(params.project_id))}
+              onClick={() => router.push(ROUTES.PROJECT_SETTINGS(project_id))}
             >
               <Settings className="h-3.5 w-3.5" />
               Settings

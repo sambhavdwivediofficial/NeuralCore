@@ -1,4 +1,4 @@
-ï»¿// frontend/app/prompts/page.jsx
+// frontend/app/prompts/page.jsx
 
 'use client';
 
@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { FileText } from 'lucide-react';
 import { PromptCard } from '@/components/prompts/PromptCard';
 import { PromptPreview } from '@/components/prompts/PromptPreview';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SearchBar } from '@/components/common/SearchBar';
 import { usePrompts } from '@/hooks/usePrompts';
@@ -28,9 +28,9 @@ export default function PromptsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-lg font-semibold text-foreground">Prompt Templates</h1>
-          <p className="text-xs text-muted-foreground">{templates.length} built-in templates â€” render and preview before deploying</p>
+          <p className="text-xs text-muted-foreground">{templates.length} built-in templates — render and preview before deploying</p>
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search templatesâ€¦" className="w-56" />
+        <SearchBar value={search} onChange={setSearch} placeholder="Search templates…" className="w-56" />
       </div>
 
       {filtered.length === 0 ? (
@@ -52,7 +52,7 @@ export default function PromptsPage() {
 
           <div className="flex flex-col gap-3">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {selected ? `Preview â€” ${selected.name}` : 'Preview'}
+              {selected ? `Preview — ${selected.name}` : 'Preview'}
             </p>
             {selected ? (
               <PromptPreview template={selected} />
@@ -68,3 +68,4 @@ export default function PromptsPage() {
     </div>
   );
 }
+

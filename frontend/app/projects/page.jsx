@@ -47,7 +47,7 @@ export default function ProjectsPage() {
 
   const handleOpen = (project) => {
     setActiveProject(project.id);
-    router.push(ROUTES.PROJECT_DETAIL(project.id));
+    router.push(ROUTES.PROJECT(project.id));
   };
 
   const handleDelete = async () => {

@@ -1,11 +1,11 @@
-﻿// frontend/app/admin/page.jsx
+// frontend/app/admin/page.jsx
 
 'use client';
 
 import Link from 'next/link';
 import { ShieldAlert, Building2, Users, Bot, Activity, ArrowRight } from 'lucide-react';
 import { PlatformStats } from '@/components/admin/PlatformStats';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { useAdminStats } from '@/hooks/useAdmin';
 import { useAuthContext } from '@/context/AuthContext';
 import { ROUTES } from '@/lib/routes';
@@ -36,7 +36,7 @@ export default function AdminPage() {
             <ShieldAlert className="h-4 w-4 text-warning" />
             <h1 className="text-lg font-semibold text-foreground">Admin Panel</h1>
           </div>
-          <p className="text-xs text-muted-foreground">Platform-wide visibility — super_admin only</p>
+          <p className="text-xs text-muted-foreground">Platform-wide visibility � super_admin only</p>
         </div>
         <Link href={ROUTES.ADMIN_ORGANIZATIONS}
           className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
@@ -89,3 +89,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

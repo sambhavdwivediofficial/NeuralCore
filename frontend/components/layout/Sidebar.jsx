@@ -1,5 +1,4 @@
-// components/layout/Sidebar.jsx
-
+// frontend/components/layout/Sidebar.jsx
 'use client';
 
 import Link from 'next/link';
@@ -16,6 +15,14 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Sparkles,
+  MessageSquare,
+  BookOpen,
+  Workflow,
+  FileText,
+  Search,
+  Layers,
+  Puzzle,
+  Building2,
 } from 'lucide-react';
 import { NAV_SECTIONS } from '@/lib/routes';
 import { useSettingsContext } from '@/context/SettingsContext';
@@ -38,6 +45,14 @@ const ICONS = {
   SearchCode,
   Activity,
   Settings,
+  MessageSquare,
+  BookOpen,
+  Workflow,
+  FileText,
+  Search,
+  Layers,
+  Puzzle,
+  Building2,
 };
 
 export function Sidebar() {
@@ -86,8 +101,8 @@ export function Sidebar() {
 
       <nav className="scrollbar-thin flex-1 overflow-y-auto px-2 py-3">
         {NAV_SECTIONS.map((section) => (
-          <div key={section.label} className="mb-4">
-            {!sidebarCollapsed ? (
+          <div key={section.id} className="mb-4">
+            {!sidebarCollapsed && section.label ? (
               <p className="mb-1 px-2 text-2xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
                 {section.label}
               </p>
@@ -95,6 +110,7 @@ export function Sidebar() {
             <div className="flex flex-col gap-0.5">
               {section.items.map((item) => {
                 const Icon = ICONS[item.icon];
+                if (!Icon) return null;
                 const isActive =
                   pathname === item.href || pathname.startsWith(`${item.href}/`);
 

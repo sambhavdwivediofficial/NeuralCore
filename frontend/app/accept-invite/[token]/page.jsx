@@ -1,4 +1,4 @@
-ï»¿// frontend/app/accept-invite/[token]/page.jsx
+// frontend/app/accept-invite/[token]/page.jsx
 
 'use client';
 
@@ -12,7 +12,7 @@ import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Label } from '@/components/common/Label';
-import { Loader } from '@/components/common/Loader';
+import { PageLoader as Loader } from '@/components/common/Loader';
 import { acceptInviteSchema } from '@/lib/validators';
 import { useAuth } from '@/hooks/useAuth';
 import { getInvite } from '@/services/auth';
@@ -112,7 +112,7 @@ export default function AcceptInvitePage() {
               id="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               className="pr-9"
               {...register('password')}
             />
@@ -131,7 +131,7 @@ export default function AcceptInvitePage() {
               id="confirmPassword"
               type={showConfirm ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               className="pr-9"
               {...register('confirmPassword')}
             />

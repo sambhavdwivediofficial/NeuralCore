@@ -162,8 +162,7 @@ async def login(
 
     token = create_access_token(user, settings)
     user_data = _build_user_response(user)
-    user_data["access_token"] = token
-    resp = ORJSONResponse(content=user_data)
+    resp = ORJSONResponse(content={"access_token": token, "user": user_data, **user_data})
     _set_auth_cookie(resp, token, settings)
     return resp
 
@@ -216,8 +215,7 @@ async def mfa_challenge(
 
     token = create_access_token(user, settings)
     user_data = _build_user_response(user)
-    user_data["access_token"] = token
-    resp = ORJSONResponse(content=user_data)
+    resp = ORJSONResponse(content={"access_token": token, "user": user_data, **user_data})
     _set_auth_cookie(resp, token, settings)
     return resp
 
