@@ -23,6 +23,7 @@ export const ROUTES = {
   AGENTS: '/agents',
   AGENT_CREATE: '/agents/create',
   AGENT: (id) => `/agents/${id}`,
+  AGENT_DETAIL: (id) => `/agents/${id}`,
   AGENT_SETTINGS: (id) => `/agents/${id}/settings`,
 
   KNOWLEDGE_BASES: '/knowledge-bases',

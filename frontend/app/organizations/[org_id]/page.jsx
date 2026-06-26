@@ -18,7 +18,7 @@ function StatTile({ icon: Icon, label, value, color }) {
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex flex-col">
-        <span className="text-lg font-bold font-mono tracking-tight text-foreground">{value ?? '—'}</span>
+        <span className="text-lg font-bold font-mono tracking-tight text-foreground">{value ?? 'â€”'}</span>
         <span className="text-xs text-muted-foreground">{label}</span>
       </div>
     </div>
@@ -82,9 +82,9 @@ export default function OrganizationDetailPage() {
               { key: 'ID', val: organization.id },
               { key: 'Name', val: organization.name },
               { key: 'Plan', val: plan },
-              { key: 'Billing email', val: organization.billing_email ?? '—' },
+              { key: 'Billing email', val: organization.billing_email ?? 'â€”' },
               { key: 'Status', val: organization.status ?? 'active' },
-              { key: 'Created', val: organization.created_at ? new Date(organization.created_at).toLocaleDateString() : '—' },
+              { key: 'Created', val: organization.created_at ? new Date(organization.created_at).toLocaleDateString() : 'â€”' },
             ].map(({ key, val }) => (
               <>
                 <span key={`k-${key}`} className="text-muted-foreground font-mono">{key}</span>

@@ -1,4 +1,4 @@
-// app/agents/[agent_id]/page.jsx
+// frontend/app/agents/[agent_id]/page.jsx
 
 'use client';
 
@@ -13,6 +13,7 @@ import { PageLoader } from '@/components/common/Loader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/common/Tabs';
 import { AgentRunner } from '@/components/agents/AgentRunner';
 import { AgentLogs } from '@/components/agents/AgentLogs';
+import { AgentProvider } from '@/context/AgentContext';
 import { useAgent, useAgentRuns } from '@/hooks/useAgents';
 import { getAgentLogs } from '@/services/agents';
 import { ROUTES } from '@/lib/routes';
@@ -31,7 +32,6 @@ const STATUS_VARIANT = {
 const RESERVED_AGENT_IDS = ['create', 'new', 'edit', 'settings', 'delete'];
 
 export default function AgentDetailPage({ params }) {
-  const router = useRouter();
   const { agent_id } = use(params);
 
   if (RESERVED_AGENT_IDS.includes(agent_id)) {
@@ -50,24 +50,54 @@ export default function AgentDetailPage({ params }) {
     );
   }
 
-  const { agent, isLoading } = useAgent(agent_id);
-  const { runs, isLoading: runsLoading } = useAgentRuns(agent_id, { page_size: 10 });
+  return (
+    <AgentProvider>
+      <AgentDetailContent agentId={agent_id} />
+    </AgentProvider>
+  );
+}
+
+function AgentDetailContent({ agentId }) {
+  const router = useRouter();
+  const { agent, isLoading } = useAgent(agentId);
+  const { runs, isLoading: runsLoading } = useAgentRuns(agentId, { page_size: 10 });
   const [selectedRunLogs, setSelectedRunLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [lastFetchedRunId, setLastFetchedRunId] = useState(null);
 
   useEffect(() => {
-    if (runs.length === 0) return;
+    if (!runs || runs.length === 0) return;
+    const latestRunId = runs[0]?.id;
+    if (latestRunId === lastFetchedRunId) return;
+    
     setLogsLoading(true);
-    getAgentLogs(agent_id, runs[0].id, { page_size: 100 })
+    setLastFetchedRunId(latestRunId);
+    
+    getAgentLogs(agentId, latestRunId, { page_size: 100 })
       .then((data) => setSelectedRunLogs(data?.items || []))
       .catch(() => setSelectedRunLogs([]))
       .finally(() => setLogsLoading(false));
-  }, [runs, agent_id]);
+  }, [runs, agentId, lastFetchedRunId]);
 
   if (isLoading) {
     return (
       <AppShell>
         <PageLoader label="Loading agent" />
+      </AppShell>
+    );
+  }
+
+  if (!agent) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center gap-4 py-20">
+          <h1 className="text-lg font-semibold">Agent not found</h1>
+          <p className="text-sm text-muted-foreground">The agent you're looking for doesn't exist or has been deleted.</p>
+          <Button onClick={() => router.push(ROUTES.AGENTS)}>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Agents
+          </Button>
+        </div>
       </AppShell>
     );
   }
@@ -99,7 +129,7 @@ export default function AgentDetailPage({ params }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(ROUTES.AGENT_SETTINGS(agent_id))}
+            onClick={() => router.push(ROUTES.AGENT_SETTINGS(agentId))}
           >
             <Settings className="h-3.5 w-3.5" />
             Settings
@@ -116,7 +146,7 @@ export default function AgentDetailPage({ params }) {
           <TabsContent value="run">
             <Card>
               <CardContent className="p-4">
-                <AgentRunner agentId={agent_id} />
+                <AgentRunner agentId={agentId} />
               </CardContent>
             </Card>
           </TabsContent>

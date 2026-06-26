@@ -107,6 +107,9 @@ services:
       WORKERS: "4"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MODEL_GATEWAY__PROVIDERS__OLLAMA__BASE_URL: "http://host.docker.internal:11434"
+      MODEL_GATEWAY__PROVIDERS__LOCAL__BASE_URL: "http://host.docker.internal:11434"
+      MODEL_GATEWAY__PROVIDERS__LLAMA__BASE_URL: "http://host.docker.internal:11434"
       APP__CORS__ALLOW_ORIGINS: '["http://localhost:5242","https://neuralcore.sambhavdwivedi.in"]'
       APP__CORS__ALLOW_CREDENTIALS: "true"
       APP__CORS__ALLOW_METHODS: '["GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"]'

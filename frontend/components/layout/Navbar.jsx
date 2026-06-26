@@ -35,7 +35,7 @@ export function Navbar() {
       <Breadcrumbs />
 
       <div className="flex items-center gap-2">
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           className="hidden gap-2 text-muted-foreground sm:flex"
@@ -47,7 +47,7 @@ export function Navbar() {
           <Command className="h-3.5 w-3.5" />
           <span>Search</span>
           <span className="kbd ml-1">⌘K</span>
-        </Button>
+        </Button> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

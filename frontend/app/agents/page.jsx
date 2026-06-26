@@ -1,4 +1,4 @@
-// app/agents/page.jsx
+// frontend/app/agents/page.jsx
 
 'use client';
 
@@ -67,7 +67,7 @@ export default function AgentsPage() {
     try {
       await runAgent(agent.id, { input: '' });
       toast.success(`${agent.name} started`);
-      router.push(ROUTES.AGENT_DETAIL(agent.id));
+      router.push(ROUTES.AGENT(agent.id));
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -130,7 +130,7 @@ export default function AgentsPage() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                onOpen={(a) => router.push(ROUTES.AGENT_DETAIL(a.id))}
+                onOpen={(a) => router.push(ROUTES.AGENT(a.id))}
                 onRun={handleRun}
                 onSettings={(a) => router.push(ROUTES.AGENT_SETTINGS(a.id))}
                 onDelete={setDeleteTarget}

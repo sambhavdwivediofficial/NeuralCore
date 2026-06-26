@@ -3,17 +3,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Building2, Plus } from 'lucide-react';
 import { OrgCard } from '@/components/organizations/OrgCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageLoader as Loader } from '@/components/common/Loader';
 import { SearchBar } from '@/components/common/SearchBar';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { useOrganizationContext } from '@/context/OrganizationContext';
+import { useOrganizationContext, OrganizationProvider } from '@/context/OrganizationContext';
 import { ROUTES } from '@/lib/routes';
 
-export default function OrganizationsPage() {
+function OrganizationsContent() {
+  const router = useRouter();
   const { organizations, isLoading, error } = useOrganizations();
   const { activeOrg, switchOrg } = useOrganizationContext();
   const [search, setSearch] = useState('');
@@ -27,13 +29,23 @@ export default function OrganizationsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-lg font-semibold text-foreground">Organizations</h1>
-          <p className="text-xs text-muted-foreground">{organizations.length} organization{organizations.length !== 1 ? 's' : ''}</p>
+      {/* Back button + Heading + Search + New org button in one row */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-semibold text-foreground">Organizations</h1>
+            <p className="text-xs text-muted-foreground">{organizations.length} organization{organizations.length !== 1 ? 's' : ''}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search…" className="w-48" />
+          <SearchBar value={search} onChange={setSearch} placeholder="Search organizations..." className="w-48" />
           <Link href={ROUTES.ORGANIZATION_CREATE}
             className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
             <Plus className="h-3.5 w-3.5" /> New org
@@ -64,3 +76,10 @@ export default function OrganizationsPage() {
   );
 }
 
+export default function OrganizationsPage() {
+  return (
+    <OrganizationProvider>
+      <OrganizationsContent />
+    </OrganizationProvider>
+  );
+}

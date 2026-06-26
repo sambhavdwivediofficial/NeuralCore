@@ -815,7 +815,7 @@ class DatabaseSettings(BaseModel):
 
 
 class RedisSettings(BaseModel):
-    url: str = "redis://redis:6379/0"
+    url: str = "redis://:dev-redis-password-change-in-prod@redis:6379/0"
     max_connections: int = 50
     socket_timeout: float = 5.0
     decode_responses: bool = True

@@ -28,9 +28,9 @@ export default function PromptsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-lg font-semibold text-foreground">Prompt Templates</h1>
-          <p className="text-xs text-muted-foreground">{templates.length} built-in templates — render and preview before deploying</p>
+          <p className="text-xs text-muted-foreground">{templates.length} built-in templates ï¿½ render and preview before deploying</p>
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search templates…" className="w-56" />
+        <SearchBar value={search} onChange={setSearch} placeholder="Search templatesï¿½" className="w-56" />
       </div>
 
       {filtered.length === 0 ? (
@@ -52,7 +52,7 @@ export default function PromptsPage() {
 
           <div className="flex flex-col gap-3">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {selected ? `Preview — ${selected.name}` : 'Preview'}
+              {selected ? `Preview ï¿½ ${selected.name}` : 'Preview'}
             </p>
             {selected ? (
               <PromptPreview template={selected} />

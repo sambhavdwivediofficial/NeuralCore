@@ -1,4 +1,4 @@
-// hooks/useAgents.js
+// frontend/hooks/useAgents.js
 
 import { useCallback, useEffect, useState } from 'react';
 import * as agentsService from '@/services/agents';
@@ -67,9 +67,14 @@ export function useAgent(agentId) {
 
   useEffect(() => {
     fetchAgent();
-    const interval = setInterval(fetchAgent, POLLING_INTERVALS.AGENT_STATUS);
-    return () => clearInterval(interval);
-  }, [fetchAgent]);
+    // Polling only when agent is in running state
+    // const interval = agent?.status === 'running' 
+    //   ? setInterval(fetchAgent, POLLING_INTERVALS.AGENT_STATUS) 
+    //   : null;
+    // return () => {
+    //   if (interval) clearInterval(interval);
+    // };
+  }, [fetchAgent, agent?.status]);
 
   return {
     agent,

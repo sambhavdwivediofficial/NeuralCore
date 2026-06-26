@@ -1,0 +1,17 @@
+# configs/model_gateway.yaml
+
+providers:
+  ollama:
+    base_url: "http://host.docker.internal:11434"
+    default_model: "Roxan"
+    enabled: true
+  
+  local:
+    base_url: "http://host.docker.internal:11434"
+    default_model: "Roxan"
+    enabled: true
+  
+  llama:
+    base_url: "http://host.docker.internal:11434"
+    default_model: "Roxan"
+    enabled: true

@@ -81,7 +81,7 @@ lifecycle:
       - RECOVERING
 
 planner:
-  model: "gpt-4o"
+  model: "Roxan"
   max_planning_steps: 20
   max_replanning_attempts: 3
   planning_timeout_seconds: 60
@@ -93,11 +93,11 @@ planner:
   task_decomposition_depth: 5
   parallel_planning_enabled: true
   plan_validation_enabled: true
-  fallback_model: "claude-3-5-sonnet-20241022"
+  fallback_model: "Roxan"
   system_prompt_template: "planner_system_v1"
 
 executor:
-  model: "gpt-4o"
+  model: "Roxan"
   max_execution_steps: 50
   step_timeout_seconds: 30
   max_tool_calls_per_step: 10
@@ -109,11 +109,11 @@ executor:
   tool_call_max_retries: 2
   error_recovery_enabled: true
   error_recovery_max_attempts: 3
-  fallback_model: "claude-3-5-sonnet-20241022"
+  fallback_model: "Roxan"
   system_prompt_template: "executor_system_v1"
 
 retrieval_agent:
-  model: "gpt-4o"
+  model: "Roxan"
   max_retrieval_iterations: 5
   queries_per_iteration: 3
   top_k_per_query: 10
@@ -124,7 +124,7 @@ retrieval_agent:
   query_decomposition_enabled: true
   hyde_enabled: true
   iterative_refinement_enabled: true
-  synthesis_model: "gpt-4o"
+  synthesis_model: "Roxan"
   system_prompt_template: "retrieval_agent_system_v1"
 
 memory_agent:
@@ -145,12 +145,12 @@ memory_agent:
   system_prompt_template: "memory_agent_system_v1"
 
 research_agent:
-  model: "gpt-4o"
+  model: "Roxan"
   max_research_depth: 5
   max_sources_per_query: 10
   max_total_sources: 50
   research_timeout_seconds: 300
-  synthesis_model: "gpt-4o"
+  synthesis_model: "Roxan"
   fact_verification_enabled: true
   citation_tracking_enabled: true
   deduplication_enabled: true
@@ -162,7 +162,7 @@ research_agent:
   system_prompt_template: "research_agent_system_v1"
 
 coding_agent:
-  model: "gpt-4o"
+  model: "Roxan"
   temperature: 0.0
   max_tokens: 8192
   supported_languages:
@@ -205,7 +205,7 @@ coding_agent:
   system_prompt_template: "coding_agent_system_v1"
 
 tool_agent:
-  model: "gpt-4o"
+  model: "Roxan"
   temperature: 0.0
   max_tokens: 2048
   max_tool_selection_attempts: 3
@@ -217,7 +217,7 @@ tool_agent:
   system_prompt_template: "tool_agent_system_v1"
 
 orchestrator:
-  model: "gpt-4o"
+  model: "Roxan"
   max_agents_per_task: 10
   coordination_timeout_seconds: 600
   result_aggregation_strategy: "weighted_merge"
