@@ -230,7 +230,7 @@ class JWTSettings(BaseModel):
     public_key: Optional[SecretStr] = None
     private_key_path: Optional[Path] = None
     public_key_path: Optional[Path] = None
-    access_token_expire_minutes: int = 1440  #15
+    access_token_expire_minutes: int = 43200
     refresh_token_expire_days: int = 30
     issuer: str = "neuralcore"
     audience: str = "neuralcore-api"

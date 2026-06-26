@@ -2,7 +2,7 @@
 
 jwt:
   algorithm: RS256
-  access_token_expire_minutes: 15
+  access_token_expire_minutes: 43200
   refresh_token_expire_days: 30
   issuer: "https://api.neuralcore.ai"
   audience: "neuralcore-api"
