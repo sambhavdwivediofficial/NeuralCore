@@ -5,7 +5,7 @@ import json
 import uuid
 from typing import Any, Optional
 
-import requests
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
@@ -181,7 +181,11 @@ async def run_agent(
     run_id = uuid.uuid4().hex
     repo = AgentRepository(db)
     agent = await repo.get_by_id(uuid.UUID(agent_id))
-    model_name = agent.model_name if agent else "Roxan:latest"
+    model_name = (
+        agent.model_name.strip()
+        if agent and agent.model_name and agent.model_name.strip()
+        else "Roxan:latest"
+    )
     
     # ⭐ System prompt + user input combine karo
     system_prompt = agent.system_prompt or ""
@@ -201,7 +205,13 @@ async def run_agent(
     await redis.setex(f"agent_run:{run_id}", RUN_REDIS_TTL, json.dumps(initial_state))
 
     try:
-        response = requests.post(
+        print("=" * 80)
+        print("RUN_AGENT START")
+        print("OLLAMA_URL:", OLLAMA_URL)
+        print("MODEL:", model_name)
+        print("FULL PROMPT:", full_prompt[:200])
+        print("=" * 80)
+        response = httpx.post(
             OLLAMA_URL,
             json={
                 "model": model_name,
@@ -214,6 +224,12 @@ async def run_agent(
             },
             timeout=120,
         )
+        print("=" * 80)
+        print("STATUS:", response.status_code)
+        print("URL:", response.url)
+        print("BODY:")
+        print(response.text)
+        print("=" * 80)
         response.raise_for_status()
         result = response.json()
         output_text = result.get("response", "")
