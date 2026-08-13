@@ -11,37 +11,10 @@
 
   <img src="https://img.shields.io/badge/Python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/FastAPI-0.110-009688.svg?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Next.js-14-black.svg?style=flat-square&logo=next.js&logoColor=white" alt="Next.js" />
   <img src="https://img.shields.io/badge/Rust-Engine-orange.svg?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
-
-  <img src="https://img.shields.io/badge/Status-Actively%20Developed-yellow.svg?style=flat-square" alt="Status" />
-  <img src="https://img.shields.io/badge/Architecture-Provider%20Agnostic-blueviolet.svg?style=flat-square" alt="Architecture" />
-
-  <img src="https://img.shields.io/badge/RAG-Advanced-success.svg?style=flat-square" alt="RAG" />
-  <img src="https://img.shields.io/badge/Agentic%20RAG-Enabled-success.svg?style=flat-square" alt="Agentic RAG" />
-  <img src="https://img.shields.io/badge/GraphRAG-Development-8A2BE2.svg?style=flat-square" alt="GraphRAG" />
-  <img src="https://img.shields.io/badge/Multi--Agent-Supported-2E8B57.svg?style=flat-square" alt="Agents" />
-
-  <img src="https://img.shields.io/badge/Memory-Long%20Term-4169E1.svg?style=flat-square" alt="Memory" />
-  <img src="https://img.shields.io/badge/Hybrid%20Search-BM25%20%2B%20Vector-orange.svg?style=flat-square" alt="Hybrid Search" />
-  <img src="https://img.shields.io/badge/Reranking-Multi%20Provider-purple.svg?style=flat-square" alt="Reranking" />
 
   <img src="https://img.shields.io/badge/Vector%20Stores-6%20Backends-informational.svg?style=flat-square" alt="Vector Stores" />
   <img src="https://img.shields.io/badge/Embeddings-Multi%20Provider-00CED1.svg?style=flat-square" alt="Embeddings" />
-
-  <img src="https://img.shields.io/badge/LLM%20Providers-8%20Supported-ff69b4.svg?style=flat-square" alt="LLM Providers" />
-  <img src="https://img.shields.io/badge/MCP-Supported-darkgreen.svg?style=flat-square" alt="MCP" />
-  <img src="https://img.shields.io/badge/A2A-Protocol-darkblue.svg?style=flat-square" alt="A2A" />
-
-  <img src="https://img.shields.io/badge/Multi--Tenant-Enterprise%20Ready-green.svg?style=flat-square" alt="Multi Tenant" />
-  <img src="https://img.shields.io/badge/Billing-Integrated-228B22.svg?style=flat-square" alt="Billing" />
-  <img src="https://img.shields.io/badge/Workflows-Orchestrated-9370DB.svg?style=flat-square" alt="Workflows" />
-  <img src="https://img.shields.io/badge/Knowledge%20Graph-Enabled-6A5ACD.svg?style=flat-square" alt="Knowledge Graph" />
-  <img src="https://img.shields.io/badge/Inference-Provider%20Agnostic-483D8B.svg?style=flat-square" alt="Inference" />
-
-  <img src="https://img.shields.io/badge/Fine--Tuning-Pipeline-orange.svg?style=flat-square" alt="Finetuning" />
-  <img src="https://img.shields.io/badge/Training-Distributed-red.svg?style=flat-square" alt="Training" />
-  <img src="https://img.shields.io/badge/Security-Role%20Based-DC143C.svg?style=flat-square" alt="Security" />
 
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Kubernetes-Native-326CE5.svg?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes" />
